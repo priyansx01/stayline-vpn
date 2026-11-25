@@ -7,11 +7,14 @@ use stayline_core::supervisor::{
 };
 use stayline_core::tunnel::TunnelStats;
 use stayline_core::{Credentials, Fingerprint, Gateway};
-use stayline_ipc::{Attention, CertificateReport, Profile, TunnelState};
+use stayline_ipc::{Attention, Profile, TunnelState};
 use stayline_net::{DeviceChannels, NetworkWatcher, TunDevice, WindowsHooks};
 use tokio::sync::{mpsc, watch};
 use tokio::task::JoinHandle;
 use zeroize::Zeroizing;
+
+pub use stayline_session::inspect_certificate;
+use stayline_session::{SessionParams, attention_for, to_ipc};
 
 const ADAPTER_NAME: &str = "stayline";
 
@@ -55,19 +58,11 @@ impl Controller {
         profile: Profile,
         password: Zeroizing<String>,
     ) -> Result<(), String> {
-        let gateway = Gateway::parse(&profile.gateway).map_err(|e| e.to_string())?;
-        let pin: Option<Fingerprint> = profile
-            .pin
-            .as_deref()
-            .filter(|p| !p.trim().is_empty())
-            .map(str::parse)
-            .transpose()
-            .map_err(|e: stayline_core::Error| e.to_string())?;
-        let credentials = Credentials {
-            username: profile.username,
-            password,
-            realm: profile.realm.filter(|r| !r.is_empty()),
-        };
+        let SessionParams {
+            gateway,
+            pin,
+            credentials,
+        } = SessionParams::from_profile(profile, password)?;
 
         let mut session = self.session.lock().await;
         if let Some(old) = session.take() {
@@ -193,77 +188,5 @@ impl Controller {
         tracing::error!(%reason, ?attention, "tunnel stopped");
         self.state
             .send_replace(TunnelState::NeedsUser { reason, attention });
-    }
-}
-
-/// Classifies why the session needs the user. For an untrusted certificate
-/// the fingerprint is fetched so the user can decide whether to trust it.
-async fn attention_for(error: &stayline_core::Error, gateway: &Gateway) -> Attention {
-    use stayline_core::Error;
-    match error {
-        Error::BadCredentials => Attention::Credentials,
-        Error::CertificateChanged { expected, actual } => Attention::CertificateChanged {
-            expected: expected.clone(),
-            actual: actual.clone(),
-        },
-        Error::CertificateUntrusted(_) => Attention::CertificateUntrusted {
-            fingerprint: inspect_certificate(gateway.to_string()).await.fingerprint,
-        },
-        _ => Attention::Other,
-    }
-}
-
-/// Fetches the gateway's certificate for the user to review.
-pub async fn inspect_certificate(gateway: String) -> CertificateReport {
-    let mut report = CertificateReport {
-        gateway: gateway.clone(),
-        fingerprint: None,
-        publicly_trusted: false,
-        problem: None,
-    };
-    let parsed = match Gateway::parse(&gateway) {
-        Ok(parsed) => parsed,
-        Err(e) => {
-            report.problem = Some(e.to_string());
-            return report;
-        }
-    };
-    let inspect = stayline_core::tls::inspect_certificate(&parsed);
-    match tokio::time::timeout(std::time::Duration::from_secs(15), inspect).await {
-        Ok(Ok(info)) => {
-            report.fingerprint = Some(info.fingerprint.to_string());
-            report.publicly_trusted = info.public_ca_error.is_none();
-            report.problem = info.public_ca_error;
-        }
-        Ok(Err(e)) => report.problem = Some(format!("could not reach the gateway: {e}")),
-        Err(_) => report.problem = Some("the gateway did not answer within 15 seconds".into()),
-    }
-    report
-}
-
-fn to_ipc(status: &Status) -> TunnelState {
-    match status {
-        Status::Connecting { attempt } => TunnelState::Connecting { attempt: *attempt },
-        Status::Connected { local_ip, since } => TunnelState::Connected {
-            local_ip: local_ip.to_string(),
-            since_unix: since
-                .duration_since(std::time::UNIX_EPOCH)
-                .map_or(0, |d| d.as_secs()),
-        },
-        Status::Reconnecting {
-            attempt,
-            retry_in,
-            last_error,
-        } => TunnelState::Reconnecting {
-            attempt: *attempt,
-            retry_in_secs: retry_in.as_secs(),
-            last_error: last_error.clone(),
-        },
-        Status::WaitingForNetwork => TunnelState::WaitingForNetwork,
-        Status::NeedsUser { reason } => TunnelState::NeedsUser {
-            reason: reason.clone(),
-            attention: Attention::Other,
-        },
-        Status::Disconnected => TunnelState::Disconnected,
     }
 }

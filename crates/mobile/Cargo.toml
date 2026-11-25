@@ -1,0 +1,33 @@
+[package]
+name = "stayline-mobile"
+description = "stayline for Android: the tunnel engine behind the app's VpnService"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[lib]
+name = "stayline_mobile"
+crate-type = ["cdylib"]
+
+[dependencies]
+stayline-core.workspace = true
+stayline-ipc.workspace = true
+stayline-session.workspace = true
+bytes.workspace = true
+jni-sys.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+zeroize.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+# Not the workspace entry: its env-filter feature pulls in regex, which
+# would add hundreds of kilobytes to the app.
+[target.'cfg(target_os = "android")'.dependencies]
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std"] }

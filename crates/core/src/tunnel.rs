@@ -20,6 +20,8 @@ use crate::ppp::{DownReason, PROTO_IPV4, PppConfig, PppEvent, PppSession, frame}
 use crate::tls::{self, Fingerprint};
 
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(20);
+/// MTU of the tunnel adapter; matches the PPP MRU we negotiate.
+pub const TUNNEL_MTU: u32 = crate::ppp::DEFAULT_MRU as u32;
 /// Packets taken from the adapter per loop turn, so reads are not starved.
 const DEVICE_BATCH: usize = 64;
 

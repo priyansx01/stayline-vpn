@@ -5,6 +5,8 @@ All notable changes to Stayline VPN are documented here. The format is based on 
 ## [Unreleased]
 
 ### Added
+- Android app: a native Jetpack Compose interface in ruby and emerald with micro-animations, on the same Rust tunnel as Windows (`crates/mobile`). Supports Always-on VPN and a Quick Settings tile, and keeps passwords in the Android Keystore.
+- `stayline-session` crate with the code the Windows service and the Android engine share.
 - Licence files, contributing guide, security policy, code of conduct and documentation in `docs/`.
 - GitHub Actions: CI (format, clippy, tests) and a release workflow that publishes the MSI.
 

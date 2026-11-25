@@ -4,10 +4,12 @@ members = [
     "crates/config",
     "crates/core",
     "crates/ipc",
+    "crates/mobile",
     "crates/net",
     "crates/svc",
     "crates/tray",
     "crates/probe",
+    "crates/session",
 ]
 
 [workspace.package]
@@ -28,6 +30,7 @@ stayline-config = { path = "crates/config" }
 stayline-core = { path = "crates/core" }
 stayline-ipc = { path = "crates/ipc" }
 stayline-net = { path = "crates/net" }
+stayline-session = { path = "crates/session" }
 
 # UI (tray)
 tray-icon = "0.26.0"
@@ -49,6 +52,10 @@ url = "2.5.8"
 bytes = "1.12.1"
 sha2 = "0.11.0"
 hex = "0.4.3"
+
+# Android
+jni-sys = "0.4.1"
+libc = "0.2.189"
 
 # Windows
 wintun = "0.5.1"

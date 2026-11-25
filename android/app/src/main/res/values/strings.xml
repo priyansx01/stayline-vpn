@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stayline</string>
+    <string name="channel_status">VPN status</string>
+    <string name="channel_attention">Needs attention</string>
+    <string name="notif_connecting">Connecting…</string>
+    <string name="notif_protected">Protected</string>
+    <string name="notif_reconnecting">Reconnecting…</string>
+    <string name="notif_waiting">Waiting for network</string>
+    <string name="notif_disconnect">Disconnect</string>
+    <string name="notif_attention_title">Stayline needs you</string>
+    <string name="notif_sign_in">Open Stayline to sign in</string>
+</resources>

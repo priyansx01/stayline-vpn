@@ -19,5 +19,4 @@ pub use iphlp::NetworkWatcher;
 #[cfg(windows)]
 pub use setup::{GatewayRoute, TunnelNetwork, WindowsHooks};
 
-/// MTU of the tunnel adapter; matches the PPP MRU we negotiate.
-pub const TUNNEL_MTU: u32 = stayline_core::ppp::DEFAULT_MRU as u32;
+pub use stayline_core::tunnel::TUNNEL_MTU;

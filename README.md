@@ -71,6 +71,10 @@ powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1   # MSI, ne
 
 See [building](docs/building.md) for running the service from a build and testing against a gateway with `stayline-probe`.
 
+## Android
+
+An Android app shares the same Rust tunnel. It has a native Jetpack Compose interface in ruby and emerald, and supports Always-on VPN and a Quick Settings tile. The app lives in [`android/`](android), and its Rust side in [`crates/mobile`](crates/mobile). See [Android](docs/android.md) for building and how it differs from Windows.
+
 ## Project layout
 
 | Path | Contents |
@@ -82,6 +86,9 @@ See [building](docs/building.md) for running the service from a build and testin
 | [`crates/config`](crates/config) | Company and user settings, saved passwords |
 | [`crates/ipc`](crates/ipc) | Messages between the app and the service |
 | [`crates/probe`](crates/probe) | Developer CLI for testing a gateway |
+| [`crates/session`](crates/session) | Code shared by the Windows service and the Android engine |
+| [`crates/mobile`](crates/mobile) | Android tunnel engine, loaded by the app over JNI |
+| [`android`](android) | Android app (Kotlin, Jetpack Compose) |
 | [`packaging`](packaging) | WiX installer source and licence-notice templates |
 | [`scripts`](scripts) | Build, installer, notice and asset scripts |
 | [`assets`](assets) | Logo, icon and installer artwork |

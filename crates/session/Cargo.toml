@@ -1,0 +1,18 @@
+[package]
+name = "stayline-session"
+description = "Platform-independent glue between the stayline core and its clients"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish.workspace = true
+
+[dependencies]
+stayline-core.workspace = true
+stayline-ipc.workspace = true
+tokio = { workspace = true, features = ["time"] }
+zeroize.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }

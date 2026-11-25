@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="pearl">#FBF7F8</color>
+    <color name="obsidian">#0B0A0F</color>
+    <color name="launcher_background">#0B0A0F</color>
+
+    <style name="Theme.Stayline" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/pearl</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+    </style>
+</resources>

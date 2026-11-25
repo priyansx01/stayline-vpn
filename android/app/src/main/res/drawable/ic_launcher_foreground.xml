@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A cut gem, ruby on the left and emerald on the right. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FF3B6B"
+        android:pathData="M54,31.83 L44.82,31.83 L31.83,44.82 L31.83,63.18 L44.82,76.17 L54,76.17 Z" />
+    <path
+        android:fillColor="#19C58A"
+        android:pathData="M54,31.83 L63.18,31.83 L76.17,44.82 L76.17,63.18 L63.18,76.17 L54,76.17 Z" />
+    <path
+        android:fillAlpha="0.32"
+        android:fillColor="#FFFFFF"
+        android:pathData="M44.82,31.83 L63.18,31.83 L58.97,41.99 L49.03,41.99 Z" />
+    <path
+        android:fillAlpha="0.18"
+        android:fillColor="#FFFFFF"
+        android:pathData="M44.82,31.83 L31.83,44.82 L41.99,49.03 L49.03,41.99 Z M63.18,31.83 L76.17,44.82 L66.01,49.03 L58.97,41.99 Z" />
+    <path
+        android:fillAlpha="0.16"
+        android:fillColor="#FFFFFF"
+        android:pathData="M49.03,41.99 L58.97,41.99 L66.01,49.03 L66.01,58.97 L58.97,66.01 L49.03,66.01 L41.99,58.97 L41.99,49.03 Z" />
+    <path
+        android:fillAlpha="0.16"
+        android:fillColor="#000000"
+        android:pathData="M31.83,63.18 L44.82,76.17 L49.03,66.01 L41.99,58.97 Z M76.17,63.18 L63.18,76.17 L58.97,66.01 L66.01,58.97 Z" />
+    <path
+        android:fillAlpha="0.28"
+        android:fillColor="#000000"
+        android:pathData="M44.82,76.17 L63.18,76.17 L58.97,66.01 L49.03,66.01 Z" />
+</vector>

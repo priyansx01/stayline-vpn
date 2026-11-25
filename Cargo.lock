@@ -5077,6 +5077,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "stayline-mobile"
+version = "0.1.1"
+dependencies = [
+ "bytes",
+ "jni-sys 0.4.1",
+ "libc",
+ "serde",
+ "serde_json",
+ "stayline-core",
+ "stayline-ipc",
+ "stayline-session",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "zeroize",
+]
+
+[[package]]
 name = "stayline-net"
 version = "0.1.1"
 dependencies = [
@@ -5104,6 +5122,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "stayline-session"
+version = "0.1.1"
+dependencies = [
+ "stayline-core",
+ "stayline-ipc",
+ "tokio",
+ "zeroize",
+]
+
+[[package]]
 name = "stayline-svc"
 version = "0.1.1"
 dependencies = [
@@ -5112,6 +5140,7 @@ dependencies = [
  "stayline-core",
  "stayline-ipc",
  "stayline-net",
+ "stayline-session",
  "tokio",
  "tracing",
  "tracing-appender",

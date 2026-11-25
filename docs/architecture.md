@@ -26,6 +26,8 @@ Stayline VPN is split into a Windows service that owns the tunnel and a tray app
 | [`stayline-svc`](../crates/svc) | bin | The Windows service; also `install`, `uninstall`, `run`, `provision` and `unprovision` commands. |
 | [`stayline-tray`](../crates/tray) | bin | Slint window, tray icon, notifications, sign-in and trust prompts. |
 | [`stayline-probe`](../crates/probe) | bin | Developer CLI to test login and the tunnel against a gateway. |
+| [`stayline-session`](../crates/session) | lib | Shared by the service and the Android engine: profile to supervisor settings, status to `TunnelState`, why a session needs the user. |
+| [`stayline-mobile`](../crates/mobile) | cdylib | The Android tunnel engine behind the app's `VpnService`. See [Android](android.md). |
 
 ## Connecting
 
@@ -34,7 +36,7 @@ Stayline VPN is split into a Windows service that owns the tunnel and a tray app
 3. `GET /remote/sslvpn-tunnel` upgrades the TLS connection to the tunnel; PPP frames are carried with Fortinet's 6-byte header.
 4. PPP negotiates LCP and IPCP, then IPv4 packets flow between the tunnel and the Wintun adapter.
 
-Certificates are checked against Windows' public roots, or against a pinned SHA-256 fingerprint. An unpinned, non-public certificate stops the connection and asks the user (or IT, through the pin) to confirm it.
+Certificates are checked against the Mozilla root certificates built into the app (`webpki-roots`), or against a pinned SHA-256 fingerprint. An unpinned, non-public certificate stops the connection and asks the user (or IT, through the pin) to confirm it.
 
 ## Staying connected
 

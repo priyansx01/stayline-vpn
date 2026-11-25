@@ -12,6 +12,7 @@ publish.workspace = true
 stayline-core.workspace = true
 stayline-ipc.workspace = true
 stayline-config.workspace = true
+stayline-session.workspace = true
 anyhow.workspace = true
 tokio = { workspace = true, features = ["rt", "signal"] }
 tracing.workspace = true
