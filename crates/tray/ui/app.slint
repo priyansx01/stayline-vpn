@@ -1,6 +1,8 @@
-// Stayline VPN window: white sidebar navigation, light content with rounded panels.
+// Stayline VPN window: the same ruby and emerald design as the Android app.
+// Ruby means off or needs you, topaz means working, emerald means protected.
 
 import { AboutSlint, ListView, Palette, ScrollView } from "std-widgets.slint";
+import "fonts/Manrope.ttf";
 
 export struct Component {
     name: string,
@@ -11,59 +13,98 @@ export struct Component {
 export global Theme {
     in-out property <bool> dark: false;
 
-    out property <color> sidebar: dark ? #191d31 : #ffffff;
-    out property <color> sidebar-text: dark ? #a3a8c3 : #5b6075;
-    out property <color> page: dark ? #0f1220 : #f3f4f9;
-    out property <color> panel: dark ? #191d31 : #ffffff;
-    out property <color> panel-alt: dark ? #20253c : #f5f6fb;
-    out property <color> border: dark ? #2a2f48 : #e6e8f0;
-    out property <color> border-strong: dark ? #3a4060 : #cfd3e1;
-    out property <color> text: dark ? #e9ebf5 : #1d2033;
-    out property <color> muted: dark ? #8d92ad : #858aa3;
-    out property <color> accent: #2f7bff;
-    out property <color> accent-soft: dark ? #2f7bff33 : #2f7bff17;
-    out property <color> success: #22c55e;
-    out property <color> warning: #f59e0b;
-    out property <color> danger: #ef4444;
-    out property <color> danger-soft: dark ? #ef444429 : #ef444414;
-    out property <color> shadow: dark ? #00000000 : #1f23400d;
+    out property <color> background: dark ? #0b0a0f : #fbf7f8;
+    out property <color> surface: dark ? #15131b : #ffffff;
+    out property <color> surface-high: dark ? #1e1b26 : #f3eef0;
+    out property <color> outline: dark ? #2a2633 : #e6dee2;
+    out property <color> text: dark ? #f4f1f6 : #1a1620;
+    out property <color> muted: dark ? #9c95a8 : #6e6678;
 
-    // 0 = off, 1 = busy, 2 = on, 3 = needs attention
-    public pure function state-color(kind: int) -> color {
-        kind == 2 ? success : kind == 1 ? warning : kind == 3 ? danger : muted
+    out property <color> emerald: dark ? #19c58a : #0e9f6e;
+    out property <color> emerald-glow: dark ? #3df5b0 : #34d399;
+    out property <color> emerald-deep: dark ? #0b6e4f : #065f46;
+    out property <color> ruby: dark ? #ff3b6b : #c8103e;
+    out property <color> ruby-glow: dark ? #ff7a9a : #ff5c85;
+    out property <color> ruby-deep: dark ? #8c0f2e : #7a0a26;
+    out property <color> topaz: dark ? #f5b544 : #c98a12;
+    out property <color> topaz-glow: dark ? #ffd58a : #f5b544;
+    out property <color> topaz-deep: dark ? #8a5a0b : #7a520a;
+
+    out property <color> shadow: dark ? #00000000 : #1a162012;
+    out property <color> scrim: dark ? #000000a6 : #1a162066;
+
+    // 0 = off, 1 = working, 2 = protected, 3 = needs you
+    public pure function mood(kind: int) -> color {
+        kind == 2 ? emerald : kind == 1 ? topaz : ruby
+    }
+    public pure function mood-glow(kind: int) -> color {
+        kind == 2 ? emerald-glow : kind == 1 ? topaz-glow : ruby-glow
+    }
+    public pure function mood-deep(kind: int) -> color {
+        kind == 2 ? emerald-deep : kind == 1 ? topaz-deep : ruby-deep
     }
 }
 
 component Panel inherits Rectangle {
-    background: Theme.panel;
-    border-radius: 16px;
+    background: Theme.surface;
+    border-radius: 20px;
     border-width: 1px;
-    border-color: Theme.border;
-    drop-shadow-blur: 16px;
-    drop-shadow-offset-y: 4px;
+    border-color: Theme.outline;
+    drop-shadow-blur: 24px;
+    drop-shadow-offset-y: 6px;
     drop-shadow-color: Theme.shadow;
 }
 
 component Caption inherits Text {
-    font-size: 11px;
-    font-weight: 600;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1px;
     color: Theme.muted;
 }
 
 component Divider inherits Rectangle {
     height: 1px;
-    background: Theme.border;
+    background: Theme.outline;
 }
 
+// Eyebrow and title at the top of every page, so nothing moves when switching.
+component PageHeader inherits HorizontalLayout {
+    in property <string> eyebrow;
+    in property <string> title;
+    height: 56px;
+    spacing: 12px;
+
+    VerticalLayout {
+        alignment: center;
+        spacing: 2px;
+        horizontal-stretch: 1;
+        Caption {
+            text: root.eyebrow;
+        }
+        Text {
+            text: root.title;
+            font-size: 22px;
+            font-weight: 800;
+            color: Theme.text;
+        }
+    }
+    VerticalLayout {
+        alignment: center;
+        @children
+    }
+}
+
+// The sidebar's pill sits behind the active row and slides between rows.
 component NavRow inherits Rectangle {
     in property <image> icon;
     in property <string> text;
     in property <bool> active;
     callback clicked;
 
-    height: 36px;
-    border-radius: 10px;
-    background: active ? Theme.accent-soft : touch.has-hover ? Theme.panel-alt : transparent;
+    height: 40px;
+    border-radius: 20px;
+    background: !active && touch.has-hover ? Theme.surface-high : transparent;
+    animate background { duration: 150ms; }
 
     touch := TouchArea {
         mouse-cursor: pointer;
@@ -75,23 +116,23 @@ component NavRow inherits Rectangle {
     HorizontalLayout {
         padding-left: 14px;
         padding-right: 10px;
-        spacing: 11px;
+        spacing: 12px;
 
         VerticalLayout {
             alignment: center;
             Image {
                 source: root.icon;
-                width: 16px;
-                height: 16px;
-                colorize: root.active ? Theme.accent : Theme.sidebar-text;
+                width: 18px;
+                height: 18px;
+                colorize: root.active ? Theme.emerald : Theme.muted;
             }
         }
 
         Text {
             text: root.text;
-            font-size: 12px;
-            font-weight: root.active ? 600 : 400;
-            color: root.active ? Theme.accent : Theme.sidebar-text;
+            font-size: 13px;
+            font-weight: root.active ? 700 : 500;
+            color: root.active ? Theme.emerald : Theme.muted;
             vertical-alignment: center;
         }
     }
@@ -104,15 +145,22 @@ component Button inherits Rectangle {
     in property <bool> enabled: true;
     callback clicked;
 
-    property <color> base: kind == 0 ? Theme.accent : kind == 2 ? Theme.danger : kind == 1 ? Theme.panel-alt : transparent;
-    property <color> label-color: kind == 0 || kind == 2 ? #ffffff : kind == 3 ? Theme.accent : Theme.text;
+    property <color> label-color: kind == 0 || kind == 2 ? #ffffff : kind == 3 ? Theme.emerald : Theme.text;
 
-    height: 32px;
-    border-radius: 9px;
+    height: 36px;
+    border-radius: 18px;
     border-width: kind == 1 ? 1px : 0px;
-    border-color: Theme.border;
-    background: !enabled ? base : touch.pressed ? base.darker(0.14) : touch.has-hover ? (kind == 3 ? Theme.accent-soft : base.darker(0.07)) : base;
-    opacity: enabled ? 1 : 0.45;
+    border-color: Theme.outline;
+    background: kind == 0 ? @linear-gradient(90deg, Theme.emerald-glow 0%, Theme.emerald 100%) : kind == 2 ? @linear-gradient(90deg, Theme.ruby-glow 0%, Theme.ruby 100%) : transparent;
+    opacity: enabled ? 1 : 0.4;
+    animate opacity { duration: 180ms; }
+
+    // Hover lightens and press darkens, whatever the button's colour.
+    Rectangle {
+        border-radius: parent.border-radius;
+        background: !root.enabled ? transparent : touch.pressed ? #0000001f : touch.has-hover ? (root.kind == 0 || root.kind == 2 ? #ffffff26 : root.kind == 3 ? Theme.emerald.with-alpha(0.12) : Theme.surface-high) : transparent;
+        animate background { duration: 150ms; }
+    }
 
     touch := TouchArea {
         enabled: root.enabled;
@@ -123,12 +171,12 @@ component Button inherits Rectangle {
     }
 
     HorizontalLayout {
-        padding-left: root.kind == 3 ? 8px : 14px;
-        padding-right: root.kind == 3 ? 8px : 14px;
+        padding-left: root.kind == 3 ? 10px : 18px;
+        padding-right: root.kind == 3 ? 10px : 18px;
         Text {
             text: root.text;
             font-size: 12px;
-            font-weight: 600;
+            font-weight: 700;
             color: root.label-color;
             horizontal-alignment: center;
             vertical-alignment: center;
@@ -146,77 +194,119 @@ component Field inherits VerticalLayout {
     in property <bool> mono;
     // Wraps long values (fingerprints) onto more lines instead of scrolling.
     in property <bool> multiline;
+    in property <bool> error;
     callback edited(string);
     callback accepted(string);
 
-    property <bool> reveal;
-    spacing: 4px;
+    // Shakes the box, e.g. after a rejected password.
+    public function shake() {
+        shaking = true;
+        settle.running = true;
+    }
 
-    if root.label != "": Caption {
+    property <bool> reveal;
+    property <bool> shaking;
+    spacing: 6px;
+
+    if root.label != "": Text {
         text: root.label;
+        font-size: 11px;
+        font-weight: 600;
+        color: Theme.muted;
     }
 
     Rectangle {
-        height: root.multiline ? max(32px, input.preferred-height + 14px) : 32px;
+        height: root.multiline ? max(38px, input.preferred-height + 16px) : 38px;
         // The placeholder's width follows the box, not the other way round.
         min-width: 0px;
-        clip: true;
-        border-radius: 8px;
-        background: root.read-only ? Theme.panel-alt : Theme.panel;
-        border-width: 1px;
-        border-color: input.has-focus ? Theme.accent : Theme.border;
 
-        HorizontalLayout {
-            padding-left: 10px;
-            padding-right: 8px;
-            spacing: 6px;
-
-            input := TextInput {
-                text <=> root.text;
-                read-only: root.read-only;
-                single-line: !root.multiline;
-                wrap: root.multiline ? TextWrap.word-wrap : TextWrap.no-wrap;
-                font-size: root.mono ? 11px : 12px;
-                font-family: root.mono ? "Consolas" : "Segoe UI";
-                color: Theme.text;
-                selection-background-color: Theme.accent-soft;
-                vertical-alignment: center;
-                input-type: root.password && !root.reveal ? InputType.password : InputType.text;
-                edited => {
-                    root.edited(self.text);
-                }
-                accepted => {
-                    root.accepted(self.text);
-                }
+        settle := Timer {
+            interval: 70ms;
+            running: false;
+            triggered => {
+                self.running = false;
+                root.shaking = false;
             }
+        }
 
-            if root.password: VerticalLayout {
-                alignment: center;
-                Image {
-                    source: root.reveal ? @image-url("icons/visibility_off.svg") : @image-url("icons/visibility.svg");
-                    width: 15px;
-                    height: 15px;
-                    colorize: Theme.muted;
-                    TouchArea {
-                        mouse-cursor: pointer;
-                        clicked => {
-                            root.reveal = !root.reveal;
+        box := Rectangle {
+            x: 0px;
+            width: parent.width;
+            height: parent.height;
+            clip: true;
+            border-radius: 12px;
+            background: root.read-only ? Theme.surface-high : Theme.surface-high.with-alpha(0.55);
+            border-width: 1px;
+            border-color: root.error ? Theme.ruby : input.has-focus && !root.read-only ? Theme.emerald : Theme.outline;
+            animate border-color { duration: 180ms; }
+
+            states [
+                shaking when root.shaking: {
+                    x: 10px;
+                    in {
+                        animate x { duration: 60ms; }
+                    }
+                    out {
+                        animate x {
+                            duration: 520ms;
+                            easing: ease-out-elastic;
+                        }
+                    }
+                }
+            ]
+
+            HorizontalLayout {
+                padding-left: 12px;
+                padding-right: 10px;
+                spacing: 6px;
+
+                input := TextInput {
+                    text <=> root.text;
+                    read-only: root.read-only;
+                    single-line: !root.multiline;
+                    wrap: root.multiline ? TextWrap.word-wrap : TextWrap.no-wrap;
+                    font-size: root.mono ? 11px : 12px;
+                    font-family: root.mono ? "Consolas" : "Manrope";
+                    color: Theme.text;
+                    selection-background-color: Theme.emerald.with-alpha(0.25);
+                    vertical-alignment: center;
+                    input-type: root.password && !root.reveal ? InputType.password : InputType.text;
+                    edited => {
+                        root.edited(self.text);
+                    }
+                    accepted => {
+                        root.accepted(self.text);
+                    }
+                }
+
+                if root.password: VerticalLayout {
+                    alignment: center;
+                    Image {
+                        source: root.reveal ? @image-url("icons/visibility_off.svg") : @image-url("icons/visibility.svg");
+                        width: 16px;
+                        height: 16px;
+                        colorize: Theme.muted;
+                        TouchArea {
+                            mouse-cursor: pointer;
+                            clicked => {
+                                root.reveal = !root.reveal;
+                            }
                         }
                     }
                 }
             }
-        }
 
-        if root.text == "" && root.placeholder != "": Text {
-            x: 11px;
-            // Stops before the eye icon instead of running under it.
-            width: parent.width - self.x - (root.password ? 32px : 10px);
-            height: parent.height;
-            overflow: elide;
-            text: root.placeholder;
-            font-size: 12px;
-            color: Theme.muted.with-alpha(0.75);
-            vertical-alignment: center;
+            if root.text == "" && root.placeholder != "": Text {
+                x: 13px;
+                // Stops before the eye icon instead of running under it.
+                width: parent.width - self.x - (root.password ? 34px : 10px);
+                height: parent.height;
+                overflow: elide;
+                text: root.placeholder;
+                font-size: 12px;
+                color: Theme.muted.with-alpha(0.7);
+                vertical-alignment: center;
+            }
         }
     }
 
@@ -232,23 +322,26 @@ component Toggle inherits Rectangle {
     in-out property <bool> checked;
     callback toggled;
 
-    width: 34px;
-    height: 20px;
-    border-radius: 10px;
-    background: checked ? Theme.accent : Theme.border-strong;
-    animate background { duration: 120ms; }
+    width: 40px;
+    height: 22px;
+    border-radius: 11px;
+    background: checked ? Theme.emerald : Theme.surface-high;
+    border-width: checked ? 0px : 1px;
+    border-color: Theme.outline;
+    animate background { duration: 180ms; }
 
     Rectangle {
         y: 3px;
         x: root.checked ? parent.width - self.width - 3px : 3px;
-        width: 14px;
-        height: 14px;
-        border-radius: 7px;
-        background: #ffffff;
+        width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background: root.checked ? #ffffff : Theme.muted;
         animate x {
-            duration: 120ms;
-            easing: ease-out;
+            duration: 220ms;
+            easing: ease-out-back;
         }
+        animate background { duration: 180ms; }
     }
 
     TouchArea {
@@ -260,34 +353,17 @@ component Toggle inherits Rectangle {
     }
 }
 
-component StatusDot inherits Rectangle {
-    in property <int> kind;
-    width: 40px;
-    height: 40px;
-    border-radius: 20px;
-    background: Theme.state-color(kind).with-alpha(0.14);
-
-    Rectangle {
-        width: 14px;
-        height: 14px;
-        border-radius: 7px;
-        background: Theme.state-color(root.kind);
-    }
-}
-
 component Chip inherits Rectangle {
     in property <string> text;
     in property <color> dot;
-    height: 24px;
-    border-radius: 12px;
-    background: Theme.panel;
-    border-width: 1px;
-    border-color: Theme.border;
+    height: 26px;
+    border-radius: 13px;
+    background: root.dot.with-alpha(0.12);
 
     HorizontalLayout {
         padding-left: 10px;
-        padding-right: 10px;
-        spacing: 6px;
+        padding-right: 11px;
+        spacing: 7px;
         VerticalLayout {
             alignment: center;
             Rectangle {
@@ -300,6 +376,7 @@ component Chip inherits Rectangle {
         Text {
             text: root.text;
             font-size: 11px;
+            font-weight: 600;
             color: Theme.text;
             vertical-alignment: center;
         }
@@ -310,64 +387,129 @@ component StatTile inherits Rectangle {
     in property <image> icon;
     in property <string> value;
     in property <string> caption;
+    in property <color> tint: Theme.emerald;
+    in property <bool> live: true;
 
-    border-radius: 14px;
-    background: Theme.panel;
+    border-radius: 18px;
+    background: Theme.surface;
     border-width: 1px;
-    border-color: Theme.border;
-    drop-shadow-blur: 12px;
-    drop-shadow-offset-y: 3px;
+    border-color: Theme.outline;
+    drop-shadow-blur: 18px;
+    drop-shadow-offset-y: 4px;
     drop-shadow-color: Theme.shadow;
-    min-height: 82px;
+    min-height: 64px;
     min-width: 0px;
     preferred-width: 100px;
     horizontal-stretch: 1;
 
-    VerticalLayout {
+    HorizontalLayout {
         padding: 12px;
-        spacing: 5px;
-        alignment: center;
+        spacing: 10px;
 
-        HorizontalLayout {
+        VerticalLayout {
             alignment: center;
-            Image {
-                source: root.icon;
-                width: 15px;
-                height: 15px;
-                colorize: Theme.accent;
+            Rectangle {
+                width: 34px;
+                height: 34px;
+                border-radius: 17px;
+                background: root.tint.with-alpha(root.live ? 0.14 : 0.07);
+                animate background { duration: 320ms; }
+                Image {
+                    source: root.icon;
+                    width: 16px;
+                    height: 16px;
+                    colorize: root.tint.with-alpha(root.live ? 1 : 0.5);
+                }
             }
         }
-        Text {
-            text: root.value;
-            font-size: 14px;
-            font-weight: 600;
-            color: Theme.text;
-            horizontal-alignment: center;
-            overflow: elide;
-        }
-        Text {
-            text: root.caption;
-            font-size: 11px;
-            color: Theme.muted;
-            horizontal-alignment: center;
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+            horizontal-stretch: 1;
+            min-width: 0px;
+            Caption {
+                text: root.caption;
+                font-size: 9px;
+                overflow: elide;
+            }
+            Text {
+                text: root.value;
+                font-size: 13px;
+                font-weight: 700;
+                color: Theme.text.with-alpha(root.live ? 1 : 0.55);
+                overflow: elide;
+            }
         }
     }
 }
 
 component Banner inherits Rectangle {
     in property <string> text;
+    in property <string> title;
     in property <bool> error: true;
 
-    border-radius: 10px;
-    background: error ? Theme.danger-soft : Theme.accent-soft;
+    property <color> tint: error ? Theme.ruby : Theme.emerald;
+    border-radius: 16px;
+    background: tint.with-alpha(0.10);
+    border-width: 1px;
+    border-color: tint.with-alpha(0.30);
 
     HorizontalLayout {
-        padding: 10px;
+        padding: 12px;
+        spacing: 12px;
+        VerticalLayout {
+            alignment: start;
+            Rectangle {
+                width: 30px;
+                height: 30px;
+                border-radius: 15px;
+                background: root.tint.with-alpha(0.16);
+                Image {
+                    source: root.error ? @image-url("icons/warning.svg") : @image-url("icons/info.svg");
+                    width: 15px;
+                    height: 15px;
+                    colorize: root.tint;
+                }
+            }
+        }
+        VerticalLayout {
+            alignment: center;
+            spacing: 2px;
+            horizontal-stretch: 1;
+            if root.title != "": Text {
+                text: root.title;
+                font-size: 12px;
+                font-weight: 700;
+                color: Theme.text;
+                wrap: word-wrap;
+            }
+            Text {
+                text: root.text;
+                wrap: word-wrap;
+                font-size: 12px;
+                color: root.title != "" ? Theme.muted : root.error ? Theme.ruby : Theme.text;
+            }
+        }
+    }
+}
+
+// A SHA-256 fingerprint in tinted monospace, as on Android.
+component Fingerprint inherits Rectangle {
+    in property <string> text;
+    in property <color> tint: Theme.text;
+    border-radius: 12px;
+    background: root.tint.with-alpha(0.07);
+    border-width: 1px;
+    border-color: root.tint.with-alpha(0.16);
+    VerticalLayout {
+        padding: 12px;
         Text {
             text: root.text;
-            wrap: word-wrap;
+            font-family: "Consolas";
             font-size: 12px;
-            color: root.error ? Theme.danger : Theme.text;
+            letter-spacing: 0.5px;
+            color: root.tint;
+            wrap: word-wrap;
         }
     }
 }
@@ -379,34 +521,48 @@ component Select inherits Rectangle {
     in property <string> placeholder: "Choose a profile";
     callback selected(int);
 
-    height: 32px;
-    border-radius: 8px;
+    height: 38px;
+    border-radius: 19px;
     border-width: 1px;
-    border-color: Theme.border;
-    background: Theme.panel;
+    border-color: touch.has-hover && root.enabled ? Theme.emerald.with-alpha(0.5) : Theme.outline;
+    background: Theme.surface;
     opacity: enabled ? 1 : 0.55;
+    animate border-color { duration: 150ms; }
 
     HorizontalLayout {
-        padding-left: 10px;
-        padding-right: 10px;
-        spacing: 6px;
+        padding-left: 14px;
+        padding-right: 12px;
+        spacing: 8px;
+        VerticalLayout {
+            alignment: center;
+            Rectangle {
+                width: 10px;
+                height: 10px;
+                border-radius: 5px;
+                background: @linear-gradient(135deg, Theme.ruby 0%, Theme.emerald 100%);
+            }
+        }
         Text {
             text: root.current-index >= 0 && root.current-index < root.model.length ? root.model[root.current-index] : root.placeholder;
             font-size: 12px;
+            font-weight: 600;
             color: Theme.text;
             overflow: elide;
             vertical-alignment: center;
             horizontal-stretch: 1;
         }
-        Text {
-            text: "▾";
-            font-size: 11px;
-            color: Theme.muted;
-            vertical-alignment: center;
+        VerticalLayout {
+            alignment: center;
+            Image {
+                source: @image-url("icons/chevron_down.svg");
+                width: 14px;
+                height: 14px;
+                colorize: Theme.muted;
+            }
         }
     }
 
-    TouchArea {
+    touch := TouchArea {
         enabled: root.enabled;
         mouse-cursor: root.enabled ? pointer : default;
         clicked => {
@@ -416,29 +572,31 @@ component Select inherits Rectangle {
 
     popup := PopupWindow {
         x: 0;
-        y: root.height + 4px;
+        y: root.height + 6px;
         width: root.width;
 
         Rectangle {
-            background: Theme.panel;
-            border-radius: 8px;
+            background: Theme.surface;
+            border-radius: 16px;
             border-width: 1px;
-            border-color: Theme.border;
-            drop-shadow-blur: 12px;
-            drop-shadow-color: #00000026;
+            border-color: Theme.outline;
+            drop-shadow-blur: 18px;
+            drop-shadow-color: #00000033;
 
             VerticalLayout {
-                padding: 4px;
+                padding: 6px;
+                spacing: 2px;
                 for item[i] in root.model: Rectangle {
-                    height: 28px;
-                    border-radius: 6px;
-                    background: i == root.current-index ? Theme.accent-soft : row.has-hover ? Theme.panel-alt : transparent;
+                    height: 32px;
+                    border-radius: 10px;
+                    background: i == root.current-index ? Theme.emerald.with-alpha(0.14) : row.has-hover ? Theme.surface-high : transparent;
                     Text {
-                        x: 8px;
+                        x: 12px;
                         height: parent.height;
                         text: item;
                         font-size: 12px;
-                        color: Theme.text;
+                        font-weight: i == root.current-index ? 700 : 500;
+                        color: i == root.current-index ? Theme.emerald : Theme.text;
                         vertical-alignment: center;
                     }
                     row := TouchArea {
@@ -453,43 +611,53 @@ component Select inherits Rectangle {
     }
 }
 
+// The highlight slides to the chosen option.
 component Segmented inherits Rectangle {
     in property <[string]> items;
     in-out property <int> current;
     callback changed(int);
 
-    height: 30px;
-    border-radius: 9px;
-    background: Theme.panel-alt;
-    border-width: 1px;
-    border-color: Theme.border;
+    property <length> segment: (self.width - 8px) / max(1, items.length);
+    width: 92px * max(1, items.length);
+    height: 36px;
+    border-radius: 18px;
+    background: Theme.surface-high;
 
-    HorizontalLayout {
-        padding: 3px;
-        spacing: 2px;
-        for item[i] in root.items: Rectangle {
-            border-radius: 7px;
-            background: i == root.current ? Theme.panel : transparent;
-            drop-shadow-blur: i == root.current ? 4px : 0px;
-            drop-shadow-color: #0000001a;
-            HorizontalLayout {
-                padding-left: 14px;
-                padding-right: 14px;
-                Text {
-                    text: item;
-                    font-size: 11px;
-                    font-weight: i == root.current ? 600 : 400;
-                    color: i == root.current ? Theme.text : Theme.muted;
-                    vertical-alignment: center;
-                    horizontal-alignment: center;
-                }
-            }
-            TouchArea {
-                mouse-cursor: pointer;
-                clicked => {
-                    root.current = i;
-                    root.changed(i);
-                }
+    Rectangle {
+        x: 4px + root.segment * root.current;
+        y: 4px;
+        width: root.segment;
+        height: parent.height - 8px;
+        border-radius: 14px;
+        background: Theme.surface;
+        border-width: 1px;
+        border-color: Theme.outline;
+        drop-shadow-blur: 6px;
+        drop-shadow-color: Theme.shadow;
+        animate x {
+            duration: 260ms;
+            easing: ease-out-back;
+        }
+    }
+
+    for item[i] in root.items: Rectangle {
+        x: 4px + root.segment * i;
+        y: 4px;
+        width: root.segment;
+        height: parent.height - 8px;
+        Text {
+            text: item;
+            font-size: 12px;
+            font-weight: i == root.current ? 700 : 500;
+            color: i == root.current ? Theme.text : Theme.muted;
+            vertical-alignment: center;
+            horizontal-alignment: center;
+        }
+        TouchArea {
+            mouse-cursor: pointer;
+            clicked => {
+                root.current = i;
+                root.changed(i);
             }
         }
     }
@@ -499,17 +667,17 @@ component SettingRow inherits HorizontalLayout {
     in property <string> title;
     in property <string> description;
     spacing: 16px;
-    padding-top: 12px;
-    padding-bottom: 12px;
+    padding-top: 14px;
+    padding-bottom: 14px;
 
     VerticalLayout {
-        spacing: 2px;
+        spacing: 3px;
         alignment: center;
         horizontal-stretch: 1;
         Text {
             text: root.title;
-            font-size: 12px;
-            font-weight: 600;
+            font-size: 13px;
+            font-weight: 700;
             color: Theme.text;
         }
         if root.description != "": Text {
@@ -521,7 +689,10 @@ component SettingRow inherits HorizontalLayout {
     }
     VerticalLayout {
         alignment: center;
-        @children
+        HorizontalLayout {
+            alignment: end;
+            @children
+        }
     }
 }
 
@@ -538,17 +709,268 @@ component InfoRow inherits HorizontalLayout {
     Text {
         text: root.value != "" ? root.value : "–";
         font-size: 12px;
+        font-weight: 600;
         color: Theme.text;
         overflow: elide;
         horizontal-stretch: 1;
     }
 }
 
+// The connect button: a cut gem, ported from the Android app. It glows ruby
+// when off, turns topaz and spins a ring while working, and settles into
+// emerald once the tunnel is up, with one ripple to mark it.
+component GemOrb inherits Rectangle {
+    in property <int> kind;
+    in property <bool> enabled: true;
+    in property <string> label;
+    callback clicked;
+
+    property <color> base: Theme.mood(kind);
+    property <color> glow: Theme.mood-glow(kind);
+    animate base {
+        duration: 600ms;
+        easing: ease-out;
+    }
+    animate glow {
+        duration: 600ms;
+        easing: ease-out;
+    }
+
+    // Continuous animation only runs while working. Unlike Android, the glow
+    // holds steady once connected: the software renderer would redraw the
+    // whole halo every frame for as long as the tunnel is up.
+    property <bool> working: kind == 1;
+    property <bool> alive: kind == 2 || kind == 3;
+    property <angle> spin: working ? animation-tick() / 1400ms * 360deg : 0deg;
+
+    property <bool> rippling;
+    property <duration> ripple-start;
+    property <float> ripple: rippling ? clamp((animation-tick() - ripple-start) / 1500ms, 0, 1) : 1;
+    changed kind => {
+        if kind == 2 {
+            ripple-start = animation-tick();
+            rippling = true;
+            ripple-done.running = true;
+        }
+    }
+    ripple-done := Timer {
+        interval: 1600ms;
+        running: false;
+        triggered => {
+            self.running = false;
+            root.rippling = false;
+        }
+    }
+
+    property <float> press: !enabled ? 1 : touch.pressed ? 0.94 : touch.has-hover ? 1.03 : 1;
+    animate press {
+        duration: 200ms;
+        easing: ease-out-back;
+    }
+
+    accessible-role: button;
+    accessible-label: label;
+    accessible-action-default => {
+        root.clicked();
+    }
+
+    // Halo.
+    Rectangle {
+        property <float> alpha: (Theme.dark ? 1 : 0.7) * (root.alive ? 0.30 : root.working ? 0.30 : 0.16);
+        width: root.width * 1.6;
+        height: self.width;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        background: @radial-gradient(circle, root.glow.with-alpha(self.alpha) 0%, root.glow.with-alpha(0) 70%);
+    }
+
+    // One ripple when the tunnel comes up.
+    if root.ripple < 1: Rectangle {
+        width: root.width * (0.66 + 0.55 * root.ripple);
+        height: self.width;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        border-radius: self.width / 2;
+        border-width: 3px * (1 - root.ripple) + 0.5px;
+        border-color: root.glow.with-alpha((1 - root.ripple) * 0.7);
+    }
+
+    // Orbit track, and the spinning arc while working.
+    Rectangle {
+        width: root.width * 0.86;
+        height: self.width;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+        border-radius: self.width / 2;
+        border-width: 1.5px;
+        border-color: root.base.with-alpha(0.22);
+    }
+    if root.working: Path {
+        width: root.width;
+        height: root.height;
+        viewbox-width: 100;
+        viewbox-height: 100;
+        stroke: root.glow;
+        stroke-width: 3px;
+        commands: "M " + (50 + 43 * cos(root.spin)) + " " + (50 + 43 * sin(root.spin)) + " A 43 43 0 1 1 " + (50 + 43 * cos(root.spin + 280deg)) + " " + (50 + 43 * sin(root.spin + 280deg));
+    }
+
+    gem := Rectangle {
+        width: root.width * 0.62 * root.press;
+        height: self.width;
+        x: (root.width - self.width) / 2;
+        y: (root.height - self.height) / 2;
+
+        // Soft shadow under the gem.
+        Rectangle {
+            width: parent.width * 1.3;
+            height: self.width;
+            x: (parent.width - self.width) / 2;
+            y: (parent.height - self.height) / 2 + parent.height * 0.16;
+            background: @radial-gradient(circle, #00000059 0%, #00000000 65%);
+        }
+
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fill: root.base;
+            commands: "M 30.87 3.81 L 69.13 3.81 L 96.19 30.87 L 96.19 69.13 L 69.13 96.19 L 30.87 96.19 L 3.81 69.13 L 3.81 30.87 Z";
+        }
+        // Facets lit from the top left: white on the lit side, black away from it.
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fill: #ffffff2b;
+            commands: "M 30.87 3.81 L 69.13 3.81 L 60.72 24.13 L 39.28 24.13 Z M 3.81 69.13 L 3.81 30.87 L 24.13 39.28 L 24.13 60.72 Z";
+        }
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fill: #ffffff3d;
+            commands: "M 3.81 30.87 L 30.87 3.81 L 39.28 24.13 L 24.13 39.28 Z";
+        }
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fill: #00000036;
+            commands: "M 96.19 30.87 L 96.19 69.13 L 75.87 60.72 L 75.87 39.28 Z M 69.13 96.19 L 30.87 96.19 L 39.28 75.87 L 60.72 75.87 Z";
+        }
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fill: #0000004d;
+            commands: "M 96.19 69.13 L 69.13 96.19 L 60.72 75.87 L 75.87 60.72 Z";
+        }
+        // The table, and the edges between facets.
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            fill: #ffffff2e;
+            stroke: #ffffff38;
+            stroke-width: 1px;
+            commands: "M 39.28 24.13 L 60.72 24.13 L 75.87 39.28 L 75.87 60.72 L 60.72 75.87 L 39.28 75.87 L 24.13 60.72 L 24.13 39.28 Z";
+        }
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            stroke: #ffffff38;
+            stroke-width: 1px;
+            commands: "M 30.87 3.81 L 39.28 24.13 M 69.13 3.81 L 60.72 24.13 M 96.19 30.87 L 75.87 39.28 M 96.19 69.13 L 75.87 60.72 M 69.13 96.19 L 60.72 75.87 M 30.87 96.19 L 39.28 75.87 M 3.81 69.13 L 24.13 60.72 M 3.81 30.87 L 24.13 39.28";
+        }
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            stroke: #ffffff4d;
+            stroke-width: 1px;
+            commands: "M 30.87 3.81 L 69.13 3.81 L 96.19 30.87 L 96.19 69.13 L 69.13 96.19 L 30.87 96.19 L 3.81 69.13 L 3.81 30.87 Z";
+        }
+        // Power glyph.
+        Path {
+            width: 100%;
+            height: 100%;
+            viewbox-width: 100;
+            viewbox-height: 100;
+            stroke: #fffffff2;
+            stroke-width: max(2px, parent.width / 46);
+            commands: "M 57.5 37.01 A 15 15 0 1 1 42.5 37.01 M 50 32 L 50 46.25";
+        }
+    }
+
+    touch := TouchArea {
+        enabled: root.enabled;
+        mouse-cursor: root.enabled ? pointer : default;
+        clicked => {
+            root.clicked();
+        }
+    }
+}
+
+// Fades a page in when it is shown.
+component Page inherits Rectangle {
+    property <float> shown: 0;
+    opacity: shown;
+    animate shown {
+        duration: 260ms;
+        easing: ease-out;
+    }
+    init => {
+        shown = 1;
+    }
+}
+
+// A dialog over a dimmed window: the scrim fades in and the card rises.
+component Modal inherits Rectangle {
+    in property <length> card-width: 380px;
+    property <float> shown: 0;
+    animate shown {
+        duration: 240ms;
+        easing: ease-out;
+    }
+    init => {
+        shown = 1;
+    }
+
+    background: Theme.scrim;
+    opacity: shown;
+    TouchArea { }
+
+    Panel {
+        width: root.card-width;
+        height: content.preferred-height;
+        x: (parent.width - self.width) / 2;
+        y: (parent.height - self.height) / 2 + (1 - root.shown) * 16px;
+        drop-shadow-blur: 40px;
+        drop-shadow-color: #00000040;
+
+        content := VerticalLayout {
+            padding: 22px;
+            spacing: 14px;
+            @children
+        }
+    }
+}
+
 export component AppWindow inherits Window {
     title: "Stayline VPN";
     icon: @image-url("icons/stayline-icon-32.png");
-    background: Theme.page;
-    default-font-family: "Segoe UI";
+    background: Theme.background;
+    default-font-family: "Manrope";
     default-font-size: 12px;
     min-width: 760px;
     min-height: 500px;
@@ -664,17 +1086,30 @@ export component AppWindow inherits Window {
     changed is-dark => {
         Palette.color-scheme = root.is-dark ? ColorScheme.dark : ColorScheme.light;
     }
-
     HorizontalLayout {
         // ---- Sidebar ----
         Rectangle {
-            width: 196px;
-            background: Theme.sidebar;
+            width: 208px;
+            background: Theme.surface;
 
             Rectangle {
                 x: parent.width - 1px;
                 width: 1px;
-                background: Theme.border;
+                background: Theme.outline;
+            }
+
+            // The pill behind the active row slides from row to row.
+            Rectangle {
+                x: 16px;
+                width: parent.width - 32px;
+                height: 40px;
+                y: root.current-tab == 0 ? tab0.y : root.current-tab == 1 ? tab1.y : root.current-tab == 2 ? tab2.y : tab3.y;
+                border-radius: 20px;
+                background: Theme.emerald.with-alpha(0.14);
+                animate y {
+                    duration: 300ms;
+                    easing: ease-out-back;
+                }
             }
 
             VerticalLayout {
@@ -685,51 +1120,57 @@ export component AppWindow inherits Window {
                 HorizontalLayout {
                     spacing: 10px;
                     padding-left: 6px;
-                    padding-bottom: 22px;
+                    padding-bottom: 24px;
                     alignment: start;
                     VerticalLayout {
                         alignment: center;
                         Image {
                             source: @image-url("icons/stayline-logo.svg");
-                            width: 24px;
-                            height: 24px;
+                            width: 30px;
+                            height: 30px;
                             image-fit: contain;
                         }
                     }
-                    Text {
-                        text: "Stayline VPN";
-                        font-size: 16px;
-                        font-weight: 700;
-                        color: Theme.text;
-                        vertical-alignment: center;
+                    VerticalLayout {
+                        alignment: center;
+                        Text {
+                            text: "Stayline";
+                            font-size: 17px;
+                            font-weight: 800;
+                            color: Theme.text;
+                        }
+                        Caption {
+                            text: "VPN";
+                            font-size: 9px;
+                        }
                     }
                 }
 
-                NavRow {
-                    icon: @image-url("icons/activity.svg");
+                tab0 := NavRow {
+                    icon: @image-url("icons/shield.svg");
                     text: "Status";
                     active: root.current-tab == 0;
                     clicked => {
                         root.current-tab = 0;
                     }
                 }
-                NavRow {
-                    icon: @image-url("icons/lan.svg");
+                tab1 := NavRow {
+                    icon: @image-url("icons/layers.svg");
                     text: "Profiles";
                     active: root.current-tab == 1;
                     clicked => {
                         root.current-tab = 1;
                     }
                 }
-                NavRow {
-                    icon: @image-url("icons/tune.svg");
+                tab2 := NavRow {
+                    icon: @image-url("icons/sliders.svg");
                     text: "Settings";
                     active: root.current-tab == 2;
                     clicked => {
                         root.current-tab = 2;
                     }
                 }
-                NavRow {
+                tab3 := NavRow {
                     icon: @image-url("icons/info.svg");
                     text: "About";
                     active: root.current-tab == 3;
@@ -751,13 +1192,15 @@ export component AppWindow inherits Window {
                             width: 7px;
                             height: 7px;
                             border-radius: 4px;
-                            background: root.service-running ? Theme.success : Theme.danger;
+                            background: root.service-running ? Theme.emerald : Theme.ruby;
+                            animate background { duration: 600ms; }
                         }
                     }
                     Text {
                         text: root.service-running ? "Service running" : root.service-status == "Not installed" ? "Service not installed" : root.service-status == "Starting" ? "Starting service…" : "Service not running";
                         font-size: 11px;
-                        color: Theme.sidebar-text;
+                        font-weight: 600;
+                        color: Theme.muted;
                         vertical-alignment: center;
                     }
                 }
@@ -767,7 +1210,7 @@ export component AppWindow inherits Window {
                     Text {
                         text: "Version " + root.version;
                         font-size: 10px;
-                        color: Theme.sidebar-text.with-alpha(0.6);
+                        color: Theme.muted.with-alpha(0.7);
                     }
                 }
             }
@@ -775,426 +1218,247 @@ export component AppWindow inherits Window {
 
         // ---- Content ----
         VerticalLayout {
-            padding: 20px;
-            padding-top: 18px;
-            spacing: 14px;
+            padding: 24px;
+            padding-top: 14px;
             horizontal-stretch: 1;
 
-            // Page header
-            HorizontalLayout {
-                spacing: 12px;
-                VerticalLayout {
-                    spacing: 2px;
-                    horizontal-stretch: 1;
-                    Text {
-                        text: root.current-tab == 0 ? "Status" : root.current-tab == 1 ? "Profiles" : root.current-tab == 2 ? "Settings" : "About";
-                        font-size: 18px;
-                        font-weight: 600;
-                        color: Theme.text;
-                    }
-                    Text {
-                        text: root.current-tab == 0 ? "Your VPN connection at a glance" : root.current-tab == 1 ? "Gateways and sign-in details" : root.current-tab == 2 ? "Startup, appearance and troubleshooting" : "Version, licences and credits";
-                        font-size: 11px;
-                        color: Theme.muted;
-                    }
-                }
-            }
-
             // ---- Status ----
-            if root.current-tab == 0: VerticalLayout {
-                spacing: 14px;
-                alignment: start;
+            if root.current-tab == 0: Page {
                 vertical-stretch: 1;
-
-                Panel {
-                    VerticalLayout {
-                        padding: 18px;
-                        spacing: 14px;
-
-                        HorizontalLayout {
-                            spacing: 14px;
-                            StatusDot {
-                                kind: root.state-kind;
-                            }
-                            VerticalLayout {
-                                spacing: 3px;
-                                alignment: center;
-                                horizontal-stretch: 1;
-                                Text {
-                                    text: root.state-title;
-                                    font-size: 16px;
-                                    font-weight: 600;
-                                    color: Theme.text;
-                                }
-                                Text {
-                                    text: root.state-detail;
-                                    font-size: 12px;
-                                    color: Theme.muted;
-                                    wrap: word-wrap;
-                                }
-                            }
-                            VerticalLayout {
-                                alignment: center;
-                                HorizontalLayout {
-                                    spacing: 8px;
-                                    if root.state-kind == 1: Button {
-                                        text: "Cancel";
-                                        kind: 1;
-                                        clicked => {
-                                            root.cancel-connect();
-                                        }
-                                    }
-                                    if root.can-disconnect: Button {
-                                        text: "Disconnect";
-                                        kind: 1;
-                                        clicked => {
-                                            root.disconnect();
-                                        }
-                                    }
-                                    if !root.can-disconnect: Button {
-                                        text: "Connect";
-                                        enabled: root.can-connect && root.connection-names.length > 0;
-                                        clicked => {
-                                            root.connect();
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        if root.trust-mode == 2: Rectangle {
-                            border-radius: 10px;
-                            background: Theme.danger-soft;
-                            VerticalLayout {
-                                padding: 12px;
-                                spacing: 6px;
-                                Text {
-                                    text: "The gateway's certificate has changed";
-                                    font-size: 12px;
-                                    font-weight: 600;
-                                    color: Theme.danger;
-                                }
-                                Text {
-                                    text: "This can mean someone is intercepting your connection. Stayline VPN will not connect. Contact your IT department.";
-                                    font-size: 11px;
-                                    color: Theme.text;
-                                    wrap: word-wrap;
-                                }
-                                Text {
-                                    text: root.trust-fingerprint;
-                                    font-family: "Consolas";
-                                    font-size: 11px;
-                                    color: Theme.text;
-                                    wrap: word-wrap;
-                                }
-                            }
-                        }
-
-                        if root.needs-attention && root.trust-mode == 0: Banner {
-                            text: "Stayline VPN stopped retrying because something needs your attention. Check the profile, then connect again.";
-                        }
-
-                        Divider { }
-
-                        HorizontalLayout {
-                            spacing: 12px;
-                            Caption {
-                                text: "PROFILE";
-                                vertical-alignment: center;
-                                width: 60px;
-                            }
-                            if root.connection-names.length > 0: Select {
-                                model: root.connection-names;
-                                current-index <=> root.active-index;
-                                enabled: root.can-connect;
-                                selected(index) => {
-                                    root.choose-active(index);
-                                }
-                            }
-                            if root.connection-names.length == 0: HorizontalLayout {
-                                spacing: 6px;
-                                Text {
-                                    text: "No profile yet.";
-                                    font-size: 12px;
-                                    color: Theme.muted;
-                                    vertical-alignment: center;
-                                }
-                                Button {
-                                    text: "Add a profile";
-                                    kind: 3;
-                                    clicked => {
-                                        root.current-tab = 1;
-                                    }
-                                }
-                                Rectangle {
-                                    horizontal-stretch: 1;
-                                }
-                            }
-                        }
-                        InfoRow {
-                            label: "Gateway";
-                            value: root.gateway-display;
-                        }
-                    }
-                }
-
-                HorizontalLayout {
+                VerticalLayout {
                     spacing: 12px;
-                    StatTile {
-                        icon: @image-url("icons/schedule.svg");
-                        value: root.connected-for;
-                        caption: "Connected for";
+
+                    PageHeader {
+                        eyebrow: "STAYLINE";
+                        title: "Your tunnel";
+                        if root.connection-names.length > 0: Select {
+                            width: 220px;
+                            model: root.connection-names;
+                            current-index <=> root.active-index;
+                            enabled: root.can-connect;
+                            selected(index) => {
+                                root.choose-active(index);
+                            }
+                        }
+                        if root.connection-names.length == 0: Button {
+                            text: "Add a profile";
+                            kind: 3;
+                            clicked => {
+                                root.current-tab = 1;
+                            }
+                        }
                     }
-                    StatTile {
-                        icon: @image-url("icons/lan.svg");
-                        value: root.tunnel-ip;
-                        caption: "Tunnel address";
+
+                    // The gem and what it means, centred in the space left.
+                    VerticalLayout {
+                        vertical-stretch: 1;
+                        spacing: 4px;
+
+                        // Takes the room the text and tiles leave; the gem fits inside it.
+                        Rectangle {
+                            vertical-stretch: 1;
+                            min-height: 140px;
+                            preferred-height: 220px;
+                            GemOrb {
+                                property <length> size: min(230px, min(parent.width, parent.height));
+                                width: self.size;
+                                height: self.size;
+                                x: (parent.width - self.size) / 2;
+                                y: (parent.height - self.size) / 2;
+                                kind: root.state-kind;
+                                enabled: root.can-disconnect || (root.can-connect && root.connection-names.length > 0);
+                                label: root.can-disconnect ? "Disconnect" : "Connect";
+                                clicked => {
+                                    if root.can-disconnect {
+                                        root.disconnect();
+                                    } else if root.can-connect && root.connection-names.length > 0 {
+                                        root.connect();
+                                    }
+                                }
+                            }
+                        }
+                        Text {
+                            text: root.state-title;
+                            font-size: 24px;
+                            font-weight: 800;
+                            color: Theme.text;
+                            horizontal-alignment: center;
+                        }
+                        Text {
+                            text: root.state-detail;
+                            font-size: 12px;
+                            color: Theme.muted;
+                            horizontal-alignment: center;
+                            wrap: word-wrap;
+                        }
+                        if root.state-kind == 2: Text {
+                            text: root.connected-for;
+                            font-size: 26px;
+                            font-weight: 800;
+                            color: Theme.emerald;
+                            horizontal-alignment: center;
+                        }
+                        if root.state-kind == 1: HorizontalLayout {
+                            alignment: center;
+                            Button {
+                                text: "Cancel";
+                                kind: 3;
+                                clicked => {
+                                    root.cancel-connect();
+                                }
+                            }
+                        }
                     }
-                    StatTile {
-                        icon: @image-url("icons/arrow_up.svg");
-                        value: root.sent;
-                        caption: "Sent";
+
+                    if root.trust-mode == 2: Banner {
+                        title: "The gateway's certificate has changed";
+                        text: "This can mean someone is intercepting your connection. Stayline VPN will not connect. Contact your IT department.";
                     }
-                    StatTile {
-                        icon: @image-url("icons/arrow_down.svg");
-                        value: root.received;
-                        caption: "Received";
+                    if root.trust-mode == 2: Fingerprint {
+                        text: root.trust-fingerprint;
+                        tint: Theme.ruby;
+                    }
+                    if root.needs-attention && root.trust-mode == 0: Banner {
+                        text: "Stayline VPN stopped retrying because something needs your attention. Check the profile, then connect again.";
+                    }
+
+                    HorizontalLayout {
+                        spacing: 12px;
+                        StatTile {
+                            horizontal-stretch: 1.5;
+                            icon: @image-url("icons/globe.svg");
+                            value: root.gateway-display;
+                            caption: "GATEWAY";
+                            tint: Theme.topaz;
+                        }
+                        StatTile {
+                            horizontal-stretch: 1.3;
+                            icon: @image-url("icons/shield.svg");
+                            value: root.tunnel-ip;
+                            caption: "TUNNEL IP";
+                            live: root.state-kind == 2;
+                        }
+                        StatTile {
+                            icon: @image-url("icons/arrow_down.svg");
+                            value: root.received;
+                            caption: "RECEIVED";
+                            live: root.state-kind == 2;
+                        }
+                        StatTile {
+                            icon: @image-url("icons/arrow_up.svg");
+                            value: root.sent;
+                            caption: "SENT";
+                            tint: Theme.ruby;
+                            live: root.state-kind == 2;
+                        }
                     }
                 }
             }
 
             // ---- Profiles ----
-            if root.current-tab == 1: HorizontalLayout {
-                spacing: 14px;
+            if root.current-tab == 1: Page {
                 vertical-stretch: 1;
+                VerticalLayout {
+                    spacing: 12px;
 
-                Panel {
-                    width: 210px;
-                    VerticalLayout {
-                        padding: 12px;
-                        spacing: 4px;
-
-                        Caption {
-                            text: "SAVED PROFILES";
-                            height: 22px;
-                            x: 6px;
-                        }
-
-                        if root.connection-items.length == 0: Text {
-                            text: "No profiles yet.";
-                            font-size: 12px;
-                            color: Theme.muted;
-                            x: 6px;
-                        }
-
-                        for item[index] in root.connection-items: Rectangle {
-                            height: 34px;
-                            border-radius: 8px;
-                            background: index == root.selected-index ? Theme.accent-soft : row.has-hover ? Theme.panel-alt : transparent;
-
-                            row := TouchArea {
-                                mouse-cursor: pointer;
-                                clicked => {
-                                    root.select-connection(index);
-                                }
-                            }
-
-                            HorizontalLayout {
-                                padding-left: 10px;
-                                padding-right: 10px;
-                                spacing: 8px;
-                                VerticalLayout {
-                                    alignment: center;
-                                    Image {
-                                        source: @image-url("icons/lan.svg");
-                                        width: 13px;
-                                        height: 13px;
-                                        colorize: index == root.selected-index ? Theme.accent : Theme.muted;
-                                    }
-                                }
-                                Text {
-                                    text: item.text;
-                                    font-size: 12px;
-                                    font-weight: index == root.selected-index ? 600 : 400;
-                                    color: index == root.selected-index ? Theme.accent : Theme.text;
-                                    overflow: elide;
-                                    vertical-alignment: center;
-                                    horizontal-stretch: 1;
-                                }
-                            }
-                        }
-
-                        Rectangle {
-                            vertical-stretch: 1;
-                        }
-
-                        if root.can-add: HorizontalLayout {
-                            spacing: 6px;
-                            Button {
-                                text: "Add";
-                                kind: 1;
-                                horizontal-stretch: 1;
-                                clicked => {
-                                    root.add-connection();
-                                }
-                            }
-                            Button {
-                                text: "Delete";
-                                kind: 1;
-                                enabled: root.can-remove;
-                                horizontal-stretch: 1;
-                                clicked => {
-                                    root.request-delete-connection();
-                                }
-                            }
-                        }
-                        if !root.can-add: Text {
-                            text: "Profiles are set up by your IT department. Contact IT if you need a different one.";
-                            font-size: 11px;
-                            color: Theme.muted;
-                            wrap: word-wrap;
-                        }
+                    PageHeader {
+                        eyebrow: "CONNECTIONS";
+                        title: "Profiles";
                     }
-                }
 
-                Panel {
-                    horizontal-stretch: 1;
-                    VerticalLayout {
-                        ScrollView {
-                            vertical-stretch: 1;
+                    HorizontalLayout {
+                        spacing: 14px;
+                        vertical-stretch: 1;
+
+                        Panel {
+                            width: 220px;
                             VerticalLayout {
-                                padding: 18px;
-                                spacing: 12px;
-                                alignment: start;
-
-                                if root.form-error != "": Banner {
-                                    text: root.form-error;
-                                }
-                                if root.form-info != "": Banner {
-                                    text: root.form-info;
-                                    error: false;
-                                }
+                                padding: 12px;
+                                spacing: 4px;
 
                                 Caption {
-                                    text: "CONNECTION";
+                                    text: "SAVED PROFILES";
+                                    height: 24px;
+                                    x: 8px;
                                 }
-                                if root.conn-managed: VerticalLayout {
+
+                                if root.connection-items.length == 0: Text {
+                                    text: "No profiles yet.";
+                                    font-size: 12px;
+                                    color: Theme.muted;
+                                    x: 8px;
+                                }
+
+                                for item[index] in root.connection-items: Rectangle {
+                                    height: 40px;
+                                    border-radius: 12px;
+                                    background: index == root.selected-index ? Theme.emerald.with-alpha(0.12) : row.has-hover ? Theme.surface-high : transparent;
+                                    animate background { duration: 150ms; }
+
+                                    row := TouchArea {
+                                        mouse-cursor: pointer;
+                                        clicked => {
+                                            root.select-connection(index);
+                                        }
+                                    }
+
+                                    HorizontalLayout {
+                                        padding-left: 10px;
+                                        padding-right: 10px;
+                                        spacing: 10px;
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Rectangle {
+                                                width: 26px;
+                                                height: 26px;
+                                                border-radius: 9px;
+                                                background: index == root.selected-index ? Theme.emerald.with-alpha(0.16) : Theme.surface-high;
+                                                Image {
+                                                    source: @image-url("icons/globe.svg");
+                                                    width: 14px;
+                                                    height: 14px;
+                                                    colorize: index == root.selected-index ? Theme.emerald : Theme.muted;
+                                                }
+                                            }
+                                        }
+                                        Text {
+                                            text: item.text;
+                                            font-size: 12px;
+                                            font-weight: index == root.selected-index ? 700 : 500;
+                                            color: index == root.selected-index ? Theme.emerald : Theme.text;
+                                            overflow: elide;
+                                            vertical-alignment: center;
+                                            horizontal-stretch: 1;
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    vertical-stretch: 1;
+                                }
+
+                                if root.can-add: HorizontalLayout {
                                     spacing: 6px;
-                                    Text {
-                                        text: "Set up by your organisation. Only your username and password can be changed.";
-                                        font-size: 11px;
-                                        color: Theme.muted;
-                                        wrap: word-wrap;
-                                    }
-                                    InfoRow {
-                                        label: "Name";
-                                        value: root.conn-name;
-                                    }
-                                    InfoRow {
-                                        label: "Address";
-                                        value: root.gateway-host;
-                                    }
-                                    InfoRow {
-                                        label: "Port";
-                                        value: root.gateway-port != "" ? root.gateway-port : "443";
-                                    }
-                                    InfoRow {
-                                        label: "Certificate";
-                                        value: root.pin != "" ? "Pinned by your organisation" : "Public, or confirmed on first connect";
-                                    }
-                                }
-                                if !root.conn-managed: Field {
-                                    label: "Name";
-                                    text <=> root.conn-name;
-                                    placeholder: "Office VPN";
-                                }
-                                if !root.conn-managed: HorizontalLayout {
-                                    spacing: 12px;
-                                    Field {
-                                        label: "Gateway address";
-                                        text <=> root.gateway-host;
-                                        placeholder: "vpn.example.com or 203.0.113.10";
-                                        horizontal-stretch: 1;
-                                    }
-                                    Field {
-                                        label: "Port";
-                                        text <=> root.gateway-port;
-                                        placeholder: "443";
-                                        width: 96px;
-                                    }
-                                }
-
-                                Divider { }
-                                Caption {
-                                    text: "SIGN-IN";
-                                }
-                                HorizontalLayout {
-                                    spacing: 12px;
-                                    Field {
-                                        label: "Username";
-                                        text <=> root.username;
-                                        horizontal-stretch: 1;
-                                    }
-                                    Field {
-                                        label: "Password";
-                                        text <=> root.password;
-                                        password: true;
-                                        placeholder: root.password-saved ? "Saved" : "";
-                                        horizontal-stretch: 1;
-                                    }
-                                }
-                                HorizontalLayout {
-                                    spacing: 12px;
-                                    Text {
-                                        text: "Save password for this Windows account";
-                                        font-size: 12px;
-                                        color: Theme.text;
-                                        vertical-alignment: center;
-                                        horizontal-stretch: 1;
-                                    }
-                                    Toggle {
-                                        checked <=> root.save-password;
-                                    }
-                                }
-                                Field {
-                                    label: "Realm (optional)";
-                                    text <=> root.realm;
-                                    read-only: root.realm-locked;
-                                    hint: "Only needed if your IT department gave you one.";
-                                }
-
-                                if !root.conn-managed: Divider { }
-                                if !root.conn-managed: Caption {
-                                    text: "CERTIFICATE";
-                                }
-                                if !root.conn-managed: Field {
-                                    label: "SHA-256 fingerprint";
-                                    text <=> root.pin;
-                                    mono: true;
-                                    multiline: true;
-                                    placeholder: "Leave empty to confirm on first connect";
-                                }
-                                if !root.conn-managed: HorizontalLayout {
-                                    spacing: 8px;
-                                    alignment: start;
                                     Button {
-                                        text: root.cert-checking ? "Checking…" : "Check certificate";
+                                        text: "Add";
                                         kind: 1;
-                                        enabled: !root.cert-checking && root.gateway-host != "";
+                                        horizontal-stretch: 1;
                                         clicked => {
-                                            root.check-certificate();
+                                            root.add-connection();
                                         }
                                     }
-                                    if root.cert-fingerprint != "" && !root.cert-public && root.cert-fingerprint != root.pin: Button {
-                                        text: "Trust this certificate";
-                                        kind: 3;
+                                    Button {
+                                        text: "Delete";
+                                        kind: 1;
+                                        enabled: root.can-remove;
+                                        horizontal-stretch: 1;
                                         clicked => {
-                                            root.trust-certificate();
+                                            root.request-delete-connection();
                                         }
                                     }
                                 }
-                                if !root.conn-managed && root.cert-result != "": Text {
-                                    text: root.cert-result;
+                                if !root.can-add: Text {
+                                    text: "Profiles are set up by your IT department. Contact IT if you need a different one.";
                                     font-size: 11px;
                                     color: Theme.muted;
                                     wrap: word-wrap;
@@ -1202,24 +1466,172 @@ export component AppWindow inherits Window {
                             }
                         }
 
-                        Divider { }
-                        HorizontalLayout {
-                            padding: 12px;
-                            padding-left: 18px;
-                            padding-right: 18px;
-                            spacing: 8px;
-                            alignment: end;
-                            Button {
-                                text: "Save";
-                                kind: 1;
-                                clicked => {
-                                    root.save-settings();
+                        Panel {
+                            horizontal-stretch: 1;
+                            VerticalLayout {
+                                ScrollView {
+                                    vertical-stretch: 1;
+                                    VerticalLayout {
+                                        padding: 20px;
+                                        spacing: 12px;
+                                        alignment: start;
+
+                                        if root.form-error != "": Banner {
+                                            text: root.form-error;
+                                        }
+                                        if root.form-info != "": Banner {
+                                            text: root.form-info;
+                                            error: false;
+                                        }
+
+                                        Caption {
+                                            text: "CONNECTION";
+                                        }
+                                        if root.conn-managed: VerticalLayout {
+                                            spacing: 8px;
+                                            Text {
+                                                text: "Set up by your organisation. Only your username and password can be changed.";
+                                                font-size: 11px;
+                                                color: Theme.muted;
+                                                wrap: word-wrap;
+                                            }
+                                            InfoRow {
+                                                label: "Name";
+                                                value: root.conn-name;
+                                            }
+                                            InfoRow {
+                                                label: "Address";
+                                                value: root.gateway-host;
+                                            }
+                                            InfoRow {
+                                                label: "Port";
+                                                value: root.gateway-port != "" ? root.gateway-port : "443";
+                                            }
+                                            InfoRow {
+                                                label: "Certificate";
+                                                value: root.pin != "" ? "Pinned by your organisation" : "Public, or confirmed on first connect";
+                                            }
+                                        }
+                                        if !root.conn-managed: Field {
+                                            label: "Name";
+                                            text <=> root.conn-name;
+                                            placeholder: "Office VPN";
+                                        }
+                                        if !root.conn-managed: HorizontalLayout {
+                                            spacing: 12px;
+                                            Field {
+                                                label: "Gateway address";
+                                                text <=> root.gateway-host;
+                                                placeholder: "vpn.example.com or 203.0.113.10";
+                                                horizontal-stretch: 1;
+                                            }
+                                            Field {
+                                                label: "Port";
+                                                text <=> root.gateway-port;
+                                                placeholder: "443";
+                                                width: 96px;
+                                            }
+                                        }
+
+                                        Divider { }
+                                        Caption {
+                                            text: "SIGN-IN";
+                                        }
+                                        HorizontalLayout {
+                                            spacing: 12px;
+                                            Field {
+                                                label: "Username";
+                                                text <=> root.username;
+                                                horizontal-stretch: 1;
+                                            }
+                                            Field {
+                                                label: "Password";
+                                                text <=> root.password;
+                                                password: true;
+                                                placeholder: root.password-saved ? "Saved" : "";
+                                                horizontal-stretch: 1;
+                                            }
+                                        }
+                                        HorizontalLayout {
+                                            spacing: 12px;
+                                            Text {
+                                                text: "Save password for this Windows account";
+                                                font-size: 12px;
+                                                font-weight: 600;
+                                                color: Theme.text;
+                                                vertical-alignment: center;
+                                                horizontal-stretch: 1;
+                                            }
+                                            Toggle {
+                                                checked <=> root.save-password;
+                                            }
+                                        }
+                                        Field {
+                                            label: "Realm (optional)";
+                                            text <=> root.realm;
+                                            read-only: root.realm-locked;
+                                            hint: "Only needed if your IT department gave you one.";
+                                        }
+
+                                        if !root.conn-managed: Divider { }
+                                        if !root.conn-managed: Caption {
+                                            text: "CERTIFICATE";
+                                        }
+                                        if !root.conn-managed: Field {
+                                            label: "SHA-256 fingerprint";
+                                            text <=> root.pin;
+                                            mono: true;
+                                            multiline: true;
+                                            placeholder: "Leave empty to confirm on first connect";
+                                        }
+                                        if !root.conn-managed: HorizontalLayout {
+                                            spacing: 8px;
+                                            alignment: start;
+                                            Button {
+                                                text: root.cert-checking ? "Checking…" : "Check certificate";
+                                                kind: 1;
+                                                enabled: !root.cert-checking && root.gateway-host != "";
+                                                clicked => {
+                                                    root.check-certificate();
+                                                }
+                                            }
+                                            if root.cert-fingerprint != "" && !root.cert-public && root.cert-fingerprint != root.pin: Button {
+                                                text: "Trust this certificate";
+                                                kind: 3;
+                                                clicked => {
+                                                    root.trust-certificate();
+                                                }
+                                            }
+                                        }
+                                        if !root.conn-managed && root.cert-result != "": Text {
+                                            text: root.cert-result;
+                                            font-size: 11px;
+                                            color: root.cert-public ? Theme.emerald : Theme.muted;
+                                            wrap: word-wrap;
+                                        }
+                                    }
                                 }
-                            }
-                            Button {
-                                text: "Save and connect";
-                                clicked => {
-                                    root.save-and-connect();
+
+                                Divider { }
+                                HorizontalLayout {
+                                    padding: 14px;
+                                    padding-left: 20px;
+                                    padding-right: 20px;
+                                    spacing: 8px;
+                                    alignment: end;
+                                    Button {
+                                        text: "Save";
+                                        kind: 1;
+                                        clicked => {
+                                            root.save-settings();
+                                        }
+                                    }
+                                    Button {
+                                        text: "Save and connect";
+                                        clicked => {
+                                            root.save-and-connect();
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -1228,77 +1640,84 @@ export component AppWindow inherits Window {
             }
 
             // ---- Settings ----
-            if root.current-tab == 2: VerticalLayout {
-                spacing: 14px;
-                alignment: start;
+            if root.current-tab == 2: Page {
                 vertical-stretch: 1;
+                VerticalLayout {
+                    spacing: 14px;
+                    alignment: start;
 
-                Panel {
-                    VerticalLayout {
-                        padding-left: 18px;
-                        padding-right: 18px;
-                        padding-top: 4px;
-                        padding-bottom: 4px;
+                    PageHeader {
+                        eyebrow: "PREFERENCES";
+                        title: "Settings";
+                    }
 
-                        SettingRow {
-                            title: "Connect automatically";
-                            description: "Connect when Stayline VPN starts, if a password is saved.";
-                            Toggle {
-                                checked <=> root.auto-connect;
-                                toggled => {
-                                    root.preferences-changed();
+                    Panel {
+                        VerticalLayout {
+                            padding-left: 20px;
+                            padding-right: 20px;
+                            padding-top: 4px;
+                            padding-bottom: 4px;
+
+                            SettingRow {
+                                title: "Connect automatically";
+                                description: "Connect when Stayline VPN starts, if a password is saved.";
+                                Toggle {
+                                    checked <=> root.auto-connect;
+                                    toggled => {
+                                        root.preferences-changed();
+                                    }
                                 }
                             }
-                        }
-                        Divider { }
-                        SettingRow {
-                            title: "Start with Windows";
-                            description: "Open Stayline VPN in the tray when you sign in.";
-                            Toggle {
-                                checked <=> root.start-at-login;
-                                toggled => {
-                                    root.preferences-changed();
+                            Divider { }
+                            SettingRow {
+                                title: "Start with Windows";
+                                description: "Open Stayline VPN in the tray when you sign in.";
+                                Toggle {
+                                    checked <=> root.start-at-login;
+                                    toggled => {
+                                        root.preferences-changed();
+                                    }
                                 }
                             }
-                        }
-                        Divider { }
-                        SettingRow {
-                            title: "Appearance";
-                            description: "Light, dark, or follow Windows.";
-                            Segmented {
-                                items: ["Light", "Dark", "System"];
-                                current <=> root.theme-mode;
-                                changed(index) => {
-                                    root.theme-changed(index);
+                            Divider { }
+                            SettingRow {
+                                title: "Appearance";
+                                description: "Light, dark, or follow Windows.";
+                                Segmented {
+                                    items: ["Light", "Dark", "System"];
+                                    current <=> root.theme-mode;
+                                    changed(index) => {
+                                        root.theme-changed(index);
+                                    }
                                 }
                             }
                         }
                     }
-                }
 
-                Panel {
-                    VerticalLayout {
-                        padding-left: 18px;
-                        padding-right: 18px;
-                        padding-top: 4px;
-                        padding-bottom: 4px;
-                        SettingRow {
-                            title: "Background service";
-                            description: root.service-running ? "Running. The VPN stays up even when this window is closed." : root.service-status == "Not installed" ? "Not installed. Reinstall Stayline VPN or contact IT." : root.service-status == "Starting" ? "Starting…" : "Not running, so the VPN cannot connect. Restart the computer or contact IT.";
-                            Chip {
-                                text: root.service-status;
-                                dot: root.service-running ? Theme.success : Theme.danger;
+                    Panel {
+                        VerticalLayout {
+                            padding-left: 20px;
+                            padding-right: 20px;
+                            padding-top: 4px;
+                            padding-bottom: 4px;
+                            SettingRow {
+                                title: "Background service";
+                                description: root.service-running ? "Running. The VPN stays up even when this window is closed." : root.service-status == "Not installed" ? "Not installed. Reinstall Stayline VPN or contact IT." : root.service-status == "Starting" ? "Starting…" : "Not running, so the VPN cannot connect. Restart the computer or contact IT.";
+                                Chip {
+                                    text: root.service-status;
+                                    dot: root.service-running ? Theme.emerald : Theme.ruby;
+                                }
                             }
-                        }
-                        Divider { }
-                        SettingRow {
-                            title: "Logs";
-                            description: "Useful when IT asks for details about a problem.";
-                            Button {
-                                text: "Open logs folder";
-                                kind: 1;
-                                clicked => {
-                                    root.open-logs();
+                            Divider { }
+                            SettingRow {
+                                title: "Logs";
+                                description: "Useful when IT asks for details about a problem.";
+                                Button {
+                                    text: "Open logs folder";
+                                    kind: 1;
+                                    clicked => {
+                                        root.open-logs();
+                                    }
                                 }
                             }
                         }
@@ -1307,167 +1726,173 @@ export component AppWindow inherits Window {
             }
 
             // ---- About ----
-            if root.current-tab == 3: VerticalLayout {
-                spacing: 14px;
+            if root.current-tab == 3: Page {
                 vertical-stretch: 1;
+                VerticalLayout {
+                    spacing: 14px;
 
-                Panel {
-                    HorizontalLayout {
-                        padding: 16px;
-                        spacing: 14px;
-                        Rectangle {
-                            width: 52px;
-                            height: 52px;
-                            border-radius: 12px;
-                            background: Theme.panel-alt;
-                            Image {
-                                source: @image-url("icons/stayline-logo.svg");
-                                width: 36px;
-                                height: 36px;
-                                image-fit: contain;
-                            }
-                        }
-                        VerticalLayout {
-                            spacing: 2px;
-                            alignment: center;
-                            horizontal-stretch: 1;
-                            HorizontalLayout {
-                                spacing: 8px;
-                                alignment: start;
-                                Text {
-                                    text: "Stayline VPN";
-                                    font-size: 15px;
-                                    font-weight: 600;
-                                    color: Theme.text;
-                                }
-                                Text {
-                                    text: "v" + root.version;
-                                    font-size: 11px;
-                                    color: Theme.muted;
-                                    vertical-alignment: center;
-                                }
-                            }
-                            Text {
-                                text: "Keeps your FortiGate SSL-VPN connection up and reconnects it automatically.";
-                                font-size: 12px;
-                                color: Theme.text;
-                                wrap: word-wrap;
-                            }
-                            Text {
-                                text: "Not affiliated with or endorsed by Fortinet, Inc. FortiGate and FortiClient are trademarks of Fortinet, Inc. Protocol behaviour learned from openfortivpn; no openfortivpn code is included.";
-                                font-size: 10px;
-                                color: Theme.muted;
-                                wrap: word-wrap;
-                            }
-                        }
-                        VerticalLayout {
-                            alignment: center;
-                            AboutSlint { }
-                        }
+                    PageHeader {
+                        eyebrow: "ABOUT";
+                        title: "Stayline VPN";
                     }
-                }
 
-                Panel {
-                    vertical-stretch: 1;
-                    VerticalLayout {
-                        padding: 16px;
-                        spacing: 10px;
-
+                    Panel {
                         HorizontalLayout {
-                            spacing: 10px;
+                            padding: 16px;
+                            spacing: 14px;
+                            Rectangle {
+                                width: 56px;
+                                height: 56px;
+                                border-radius: 16px;
+                                background: Theme.dark ? Theme.surface-high : #0b0a0f;
+                                Image {
+                                    source: @image-url("icons/stayline-logo.svg");
+                                    width: 38px;
+                                    height: 38px;
+                                    image-fit: contain;
+                                }
+                            }
                             VerticalLayout {
+                                spacing: 3px;
                                 alignment: center;
                                 horizontal-stretch: 1;
+                                HorizontalLayout {
+                                    spacing: 8px;
+                                    alignment: start;
+                                    Text {
+                                        text: "Stayline VPN";
+                                        font-size: 15px;
+                                        font-weight: 800;
+                                        color: Theme.text;
+                                    }
+                                    Chip {
+                                        text: "v" + root.version;
+                                        dot: Theme.emerald;
+                                    }
+                                }
                                 Text {
-                                    text: "Open-source components (" + root.components.length + ")";
+                                    text: "Keeps your FortiGate SSL-VPN connection up and reconnects it automatically.";
                                     font-size: 12px;
-                                    font-weight: 600;
                                     color: Theme.text;
-                                    overflow: elide;
+                                    wrap: word-wrap;
                                 }
                                 Text {
-                                    text: "Stayline VPN is built on the software below. Thank you to all its authors.";
-                                    font-size: 11px;
+                                    text: "Not affiliated with or endorsed by Fortinet, Inc. FortiGate and FortiClient are trademarks of Fortinet, Inc. Protocol behaviour learned from openfortivpn; no openfortivpn code is included.";
+                                    font-size: 10px;
                                     color: Theme.muted;
-                                    overflow: elide;
-                                }
-                            }
-                            Field {
-                                width: 170px;
-                                text <=> root.search-query;
-                                placeholder: "Search";
-                                edited(query) => {
-                                    root.filter-components(query);
+                                    wrap: word-wrap;
                                 }
                             }
                             VerticalLayout {
                                 alignment: center;
-                                Button {
-                                    text: "Licence texts";
-                                    kind: 1;
-                                    clicked => {
-                                        root.open-notices();
+                                AboutSlint { }
+                            }
+                        }
+                    }
+
+                    Panel {
+                        vertical-stretch: 1;
+                        VerticalLayout {
+                            padding: 16px;
+                            spacing: 10px;
+
+                            HorizontalLayout {
+                                spacing: 10px;
+                                VerticalLayout {
+                                    alignment: center;
+                                    horizontal-stretch: 1;
+                                    Text {
+                                        text: "Open-source components (" + root.components.length + ")";
+                                        font-size: 13px;
+                                        font-weight: 700;
+                                        color: Theme.text;
+                                        overflow: elide;
+                                    }
+                                    Text {
+                                        text: "Stayline VPN is built on the software below. Thank you to all its authors.";
+                                        font-size: 11px;
+                                        color: Theme.muted;
+                                        overflow: elide;
+                                    }
+                                }
+                                Field {
+                                    width: 170px;
+                                    text <=> root.search-query;
+                                    placeholder: "Search";
+                                    edited(query) => {
+                                        root.filter-components(query);
+                                    }
+                                }
+                                VerticalLayout {
+                                    alignment: center;
+                                    Button {
+                                        text: "Licence texts";
+                                        kind: 1;
+                                        clicked => {
+                                            root.open-notices();
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        Rectangle {
-                            height: 26px;
-                            border-radius: 6px;
-                            background: Theme.panel-alt;
-                            HorizontalLayout {
-                                padding-left: 10px;
-                                padding-right: 10px;
-                                spacing: 10px;
-                                Caption {
-                                    text: "COMPONENT";
-                                    width: 200px;
-                                    vertical-alignment: center;
-                                }
-                                Caption {
-                                    text: "VERSION";
-                                    width: 70px;
-                                    vertical-alignment: center;
-                                }
-                                Caption {
-                                    text: "LICENCE";
-                                    vertical-alignment: center;
-                                    horizontal-stretch: 1;
+                            Rectangle {
+                                height: 28px;
+                                border-radius: 10px;
+                                background: Theme.surface-high;
+                                HorizontalLayout {
+                                    padding-left: 12px;
+                                    padding-right: 12px;
+                                    spacing: 10px;
+                                    Caption {
+                                        text: "COMPONENT";
+                                        width: 200px;
+                                        vertical-alignment: center;
+                                    }
+                                    Caption {
+                                        text: "VERSION";
+                                        width: 70px;
+                                        vertical-alignment: center;
+                                    }
+                                    Caption {
+                                        text: "LICENCE";
+                                        vertical-alignment: center;
+                                        horizontal-stretch: 1;
+                                    }
                                 }
                             }
-                        }
 
-                        ListView {
-                            vertical-stretch: 1;
-                            min-height: 80px;
-                            for component in root.components: HorizontalLayout {
-                                padding-left: 10px;
-                                padding-right: 10px;
-                                spacing: 10px;
-                                height: 24px;
-                                Text {
-                                    text: component.name;
-                                    width: 200px;
-                                    font-size: 11px;
-                                    color: Theme.text;
-                                    overflow: elide;
-                                    vertical-alignment: center;
-                                }
-                                Text {
-                                    text: component.version;
-                                    width: 70px;
-                                    font-size: 11px;
-                                    color: Theme.muted;
-                                    vertical-alignment: center;
-                                }
-                                Text {
-                                    text: component.license;
-                                    font-size: 11px;
-                                    color: Theme.muted;
-                                    overflow: elide;
-                                    vertical-alignment: center;
-                                    horizontal-stretch: 1;
+                            ListView {
+                                vertical-stretch: 1;
+                                min-height: 80px;
+                                for component in root.components: HorizontalLayout {
+                                    padding-left: 12px;
+                                    padding-right: 12px;
+                                    spacing: 10px;
+                                    height: 26px;
+                                    Text {
+                                        text: component.name;
+                                        width: 200px;
+                                        font-size: 11px;
+                                        font-weight: 600;
+                                        color: Theme.text;
+                                        overflow: elide;
+                                        vertical-alignment: center;
+                                    }
+                                    Text {
+                                        text: component.version;
+                                        width: 70px;
+                                        font-size: 11px;
+                                        color: Theme.muted;
+                                        vertical-alignment: center;
+                                    }
+                                    Text {
+                                        text: component.license;
+                                        font-size: 11px;
+                                        color: Theme.muted;
+                                        overflow: elide;
+                                        vertical-alignment: center;
+                                        horizontal-stretch: 1;
+                                    }
                                 }
                             }
                         }
@@ -1478,221 +1903,185 @@ export component AppWindow inherits Window {
     }
 
     // Delete confirmation
-    if root.confirm-delete-open: Rectangle {
-        background: #0000007a;
-        TouchArea { }
-
-        Panel {
-            width: 340px;
-            height: dialog.preferred-height;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
-
-            dialog := VerticalLayout {
-                padding: 18px;
-                spacing: 8px;
-                Text {
-                    text: "Remove profile?";
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: Theme.text;
+    if root.confirm-delete-open: Modal {
+        card-width: 360px;
+        Text {
+            text: "Remove profile?";
+            font-size: 17px;
+            font-weight: 800;
+            color: Theme.text;
+        }
+        Text {
+            text: "\"" + root.conn-name + "\" and its saved password will be removed.";
+            font-size: 12px;
+            color: Theme.muted;
+            wrap: word-wrap;
+        }
+        HorizontalLayout {
+            padding-top: 6px;
+            spacing: 8px;
+            alignment: end;
+            Button {
+                text: "Cancel";
+                kind: 1;
+                clicked => {
+                    root.cancel-delete-connection();
                 }
-                Text {
-                    text: "\"" + root.conn-name + "\" and its saved password will be removed.";
-                    font-size: 12px;
-                    color: Theme.muted;
-                    wrap: word-wrap;
-                }
-                HorizontalLayout {
-                    padding-top: 8px;
-                    spacing: 8px;
-                    alignment: end;
-                    Button {
-                        text: "Cancel";
-                        kind: 1;
-                        clicked => {
-                            root.cancel-delete-connection();
-                        }
-                    }
-                    Button {
-                        text: "Remove";
-                        kind: 2;
-                        clicked => {
-                            root.remove-connection();
-                        }
-                    }
+            }
+            Button {
+                text: "Remove";
+                kind: 2;
+                clicked => {
+                    root.remove-connection();
                 }
             }
         }
     }
 
     // Sign-in prompt
-    if root.password-prompt-open: Rectangle {
-        background: #0000007a;
-        TouchArea { }
+    if root.password-prompt-open: Modal {
+        card-width: 380px;
 
-        Panel {
-            width: 360px;
-            height: prompt.preferred-height;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
+        // A rejected password shakes the field, as on Android.
+        property <string> error: root.prompt-error;
+        init => {
+            if self.error != "" {
+                prompt-field.shake();
+            }
+        }
+        changed error => {
+            if self.error != "" {
+                prompt-field.shake();
+            }
+        }
 
-            prompt := VerticalLayout {
-                padding: 20px;
-                spacing: 12px;
-                VerticalLayout {
-                    spacing: 3px;
-                    Text {
-                        text: root.prompt-title;
-                        font-size: 14px;
-                        font-weight: 600;
-                        color: Theme.text;
-                        overflow: elide;
-                    }
-                    Text {
-                        text: root.prompt-detail;
-                        font-size: 11px;
-                        color: Theme.muted;
-                        overflow: elide;
-                    }
+        VerticalLayout {
+            spacing: 3px;
+            Text {
+                text: root.prompt-title;
+                font-size: 17px;
+                font-weight: 800;
+                color: Theme.text;
+                overflow: elide;
+            }
+            Text {
+                text: root.prompt-detail;
+                font-size: 11px;
+                color: Theme.muted;
+                overflow: elide;
+            }
+        }
+        if root.prompt-error != "": Banner {
+            text: root.prompt-error;
+        }
+        prompt-field := Field {
+            label: "Password";
+            text <=> root.prompt-password;
+            password: true;
+            error: root.prompt-error != "";
+            accepted => {
+                root.prompt-connect();
+            }
+        }
+        HorizontalLayout {
+            spacing: 12px;
+            Text {
+                text: "Save password for this Windows account";
+                font-size: 12px;
+                font-weight: 600;
+                color: Theme.text;
+                vertical-alignment: center;
+                horizontal-stretch: 1;
+            }
+            Toggle {
+                checked <=> root.prompt-remember;
+            }
+        }
+        HorizontalLayout {
+            padding-top: 4px;
+            spacing: 8px;
+            alignment: end;
+            Button {
+                text: "Cancel";
+                kind: 1;
+                clicked => {
+                    root.prompt-cancel();
                 }
-                if root.prompt-error != "": Banner {
-                    text: root.prompt-error;
-                }
-                Field {
-                    label: "Password";
-                    text <=> root.prompt-password;
-                    password: true;
-                    accepted => {
-                        root.prompt-connect();
-                    }
-                }
-                HorizontalLayout {
-                    spacing: 12px;
-                    Text {
-                        text: "Save password for this Windows account";
-                        font-size: 12px;
-                        color: Theme.text;
-                        vertical-alignment: center;
-                        horizontal-stretch: 1;
-                    }
-                    Toggle {
-                        checked <=> root.prompt-remember;
-                    }
-                }
-                HorizontalLayout {
-                    padding-top: 4px;
-                    spacing: 8px;
-                    alignment: end;
-                    Button {
-                        text: "Cancel";
-                        kind: 1;
-                        clicked => {
-                            root.prompt-cancel();
-                        }
-                    }
-                    Button {
-                        text: "Connect";
-                        enabled: root.prompt-password != "";
-                        clicked => {
-                            root.prompt-connect();
-                        }
-                    }
+            }
+            Button {
+                text: "Connect";
+                enabled: root.prompt-password != "";
+                clicked => {
+                    root.prompt-connect();
                 }
             }
         }
     }
 
     // First connection to a gateway whose certificate needs approval
-    if root.trust-mode == 1: Rectangle {
-        background: #0000007a;
-        TouchArea { }
-
-        Panel {
-            width: 440px;
-            height: trust.preferred-height;
-            x: (parent.width - self.width) / 2;
-            y: (parent.height - self.height) / 2;
-
-            trust := VerticalLayout {
-                padding: 20px;
-                spacing: 12px;
-                HorizontalLayout {
-                    spacing: 12px;
-                    Rectangle {
-                        width: 36px;
-                        height: 36px;
-                        border-radius: 18px;
-                        background: Theme.warning.with-alpha(0.15);
-                        Text {
-                            text: "!";
-                            font-size: 18px;
-                            font-weight: 700;
-                            color: Theme.warning;
-                        }
-                    }
-                    VerticalLayout {
-                        spacing: 3px;
-                        alignment: center;
-                        Text {
-                            text: "Trust this gateway?";
-                            font-size: 14px;
-                            font-weight: 600;
-                            color: Theme.text;
-                        }
-                        Text {
-                            text: "First connection to " + root.trust-gateway;
-                            font-size: 11px;
-                            color: Theme.muted;
-                            overflow: elide;
-                        }
-                    }
+    if root.trust-mode == 1: Modal {
+        card-width: 460px;
+        HorizontalLayout {
+            spacing: 12px;
+            Rectangle {
+                width: 40px;
+                height: 40px;
+                border-radius: 20px;
+                background: Theme.topaz.with-alpha(0.16);
+                Image {
+                    source: @image-url("icons/warning.svg");
+                    width: 20px;
+                    height: 20px;
+                    colorize: Theme.topaz;
+                }
+            }
+            VerticalLayout {
+                spacing: 3px;
+                alignment: center;
+                Text {
+                    text: "Trust this gateway?";
+                    font-size: 17px;
+                    font-weight: 800;
+                    color: Theme.text;
                 }
                 Text {
-                    text: "The gateway's certificate is not issued by a public authority. Check that this fingerprint matches the one from your IT department. Stayline VPN will remember it and warn you if it ever changes.";
-                    font-size: 12px;
-                    color: Theme.text;
-                    wrap: word-wrap;
+                    text: "First connection to " + root.trust-gateway;
+                    font-size: 11px;
+                    color: Theme.muted;
+                    overflow: elide;
                 }
-                VerticalLayout {
-                    spacing: 6px;
-                    Caption {
-                        text: "SHA-256 FINGERPRINT";
-                    }
-                    Rectangle {
-                        border-radius: 8px;
-                        background: Theme.page;
-                        border-width: 1px;
-                        border-color: Theme.border;
-                        VerticalLayout {
-                            padding: 10px;
-                            Text {
-                                text: root.trust-fingerprint;
-                                font-family: "Consolas";
-                                font-size: 11px;
-                                color: Theme.text;
-                                wrap: word-wrap;
-                            }
-                        }
-                    }
+            }
+        }
+        Text {
+            text: "The gateway's certificate is not issued by a public authority. Check that this fingerprint matches the one from your IT department. Stayline VPN will remember it and warn you if it ever changes.";
+            font-size: 12px;
+            color: Theme.text;
+            wrap: word-wrap;
+        }
+        VerticalLayout {
+            spacing: 6px;
+            Caption {
+                text: "SHA-256 FINGERPRINT";
+            }
+            Fingerprint {
+                text: root.trust-fingerprint;
+            }
+        }
+        HorizontalLayout {
+            padding-top: 4px;
+            spacing: 8px;
+            alignment: end;
+            Button {
+                text: "Deny";
+                kind: 1;
+                clicked => {
+                    root.dismiss-trust();
                 }
-                HorizontalLayout {
-                    padding-top: 4px;
-                    spacing: 8px;
-                    alignment: end;
-                    Button {
-                        text: "Deny";
-                        kind: 1;
-                        clicked => {
-                            root.dismiss-trust();
-                        }
-                    }
-                    Button {
-                        text: "Trust and connect";
-                        clicked => {
-                            root.trust-and-connect();
-                        }
-                    }
+            }
+            Button {
+                text: "Trust and connect";
+                clicked => {
+                    root.trust-and-connect();
                 }
             }
         }

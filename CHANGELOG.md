@@ -11,6 +11,14 @@ All notable changes to Stayline VPN are documented here. The format is based on 
 - GitHub Actions: CI (format, clippy, tests) and a release workflow that publishes the MSI.
 
 ### Changed
+- The Windows app now matches the Android design. It uses ruby, topaz and emerald for off, working and protected, the Manrope typeface, and a cut-gem connect button. The button changes colour with the state, spins a ring while connecting and ripples once when the tunnel comes up.
+- Other motion:
+  - a sliding sidebar pill;
+  - a sliding appearance switch;
+  - pages that fade in;
+  - dialogs that rise into view;
+  - a password field that shakes when the password is rejected.
+- New brand mark: a ruby and emerald gem. It is used for the application icon, the in-app logo and the installer artwork. The tray icon is a small gem in the colour of the state.
 - Installer sources moved to `packaging/`.
 
 ## [0.1.1] - 2026-10-03

@@ -130,6 +130,7 @@ lyon_algorithms	1.0.21	MIT OR Apache-2.0
 lyon_extra	1.1.0	MIT OR Apache-2.0
 lyon_geom	1.0.19	MIT OR Apache-2.0
 lyon_path	1.0.19	MIT OR Apache-2.0
+Manrope (font)	4.505	SIL Open Font License 1.1
 matchers	0.2.0	MIT
 memchr	2.8.3	Unlicense OR MIT
 memmap2	0.9.11	MIT OR Apache-2.0

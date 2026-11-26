@@ -1,5 +1,6 @@
 """
-Draws the stayline logo (two-tone shield with a padlock) from geometry and
+Draws the stayline logo (a cut gem, ruby on the left and emerald on the
+right, the same mark as the Android app's launcher icon) from geometry and
 writes every logo asset, so the mark stays crisp at any size:
 
 - assets/stayline-logo.svg               vector master
@@ -13,52 +14,50 @@ writes every logo asset, so the mark stays crisp at any size:
     python scripts/make-logo.py
 """
 
+import math
 import os
 
 from PIL import Image, ImageDraw, ImageFont
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-BLUE = (30, 99, 180)
-TEAL = (31, 154, 160)
+RUBY = (255, 59, 107)
+EMERALD = (25, 197, 138)
 WHITE = (255, 255, 255)
-NAVY = (31, 35, 64)  # the app's sidebar
+OBSIDIAN = (11, 10, 15)  # the app's dark background
 N = 1024  # design grid; everything below is in these units
+C = N / 2
+R = N * 0.47  # gem radius, leaving a small margin
+TABLE = 0.56  # inner octagon (the table) relative to the gem
 
 
-def cubic(p0, p1, p2, p3, steps=64):
-    pts = []
-    for i in range(steps + 1):
-        t = i / steps
-        u = 1 - t
-        pts.append(
-            (
-                u**3 * p0[0] + 3 * u * u * t * p1[0] + 3 * u * t * t * p2[0] + t**3 * p3[0],
-                u**3 * p0[1] + 3 * u * u * t * p1[1] + 3 * u * t * t * p2[1] + t**3 * p3[1],
-            )
-        )
-    return pts
+def octagon(radius):
+    """Flat-topped octagon around the centre, clockwise from the top left."""
+    return [
+        (C + radius * math.cos(math.radians(-112.5 + 45 * i)), C + radius * math.sin(math.radians(-112.5 + 45 * i)))
+        for i in range(8)
+    ]
 
 
-# Right half of the shield as cubic segments; the left half is mirrored.
-TOP = (512, 84)
-SHOULDER = (868, 196)
-TIP = (512, 948)
-TOP_CURVE = ((626, 150), (750, 184))
-SIDE_CURVE = ((884, 540), (770, 800))
+OUTER = octagon(R)
+INNER = octagon(R * TABLE)
 
 
-def shield_polygon():
-    right = cubic(TOP, *TOP_CURVE, SHOULDER) + cubic(SHOULDER, *SIDE_CURVE, TIP)[1:]
-    left = [(N - x, y) for x, y in reversed(right[:-1])]
-    return right + left
+def facet(i):
+    j = (i + 1) % 8
+    return [OUTER[i], OUTER[j], INNER[j], INNER[i]]
 
 
-# Padlock
-BODY = (348, 468, 676, 744)  # x0, y0, x1, y1
-BODY_R = 52
-SHACKLE_CX, SHACKLE_TOP, SHACKLE_R, SHACKLE_W = 512, 268, 112, 58
-KEY_CY, KEY_R = 582, 44
-KEY_STEM = (512 - 22, 600, 512 + 22, 680)
+# Facets lit from the top: (facet index, colour, opacity). Facet 0 is the
+# top, then clockwise. Matches the Android launcher icon.
+SHADING = [
+    (0, WHITE, 0.32),
+    (7, WHITE, 0.18),
+    (1, WHITE, 0.18),
+    (5, (0, 0, 0), 0.16),
+    (3, (0, 0, 0), 0.16),
+    (4, (0, 0, 0), 0.28),
+]
+TABLE_TINT = (WHITE, 0.16)
 
 
 def draw(scale: int) -> Image.Image:
@@ -67,80 +66,55 @@ def draw(scale: int) -> Image.Image:
     size = N * s
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
 
-    # Two-tone shield: draw the shield as a mask, colour each half.
+    # Two-tone gem: draw the gem as a mask, colour each half.
     mask = Image.new("L", (size, size), 0)
-    ImageDraw.Draw(mask).polygon([(x * s, y * s) for x, y in shield_polygon()], fill=255)
-    halves = Image.new("RGBA", (size, size), BLUE + (255,))
-    ImageDraw.Draw(halves).rectangle((size // 2, 0, size, size), fill=TEAL + (255,))
+    ImageDraw.Draw(mask).polygon([(x * s, y * s) for x, y in OUTER], fill=255)
+    halves = Image.new("RGBA", (size, size), RUBY + (255,))
+    ImageDraw.Draw(halves).rectangle((size // 2, 0, size, size), fill=EMERALD + (255,))
     img.paste(halves, (0, 0), mask)
 
-    d = ImageDraw.Draw(img)
-    # Shackle: a U made of a half ring and two legs reaching into the body.
-    r_out = (SHACKLE_R + SHACKLE_W / 2) * s
-    cy = (SHACKLE_TOP + SHACKLE_R) * s
-    cx = SHACKLE_CX * s
-    d.arc(
-        (cx - r_out, cy - r_out, cx + r_out, cy + r_out),
-        180,
-        360,
-        fill=WHITE,
-        width=int(SHACKLE_W * s),
-    )
-    for leg_x in (SHACKLE_CX - SHACKLE_R, SHACKLE_CX + SHACKLE_R):
-        x0 = (leg_x - SHACKLE_W / 2) * s
-        d.rectangle((x0, cy, x0 + SHACKLE_W * s, (BODY[1] + 20) * s), fill=WHITE)
+    def tint(points, colour, alpha):
+        layer = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+        ImageDraw.Draw(layer).polygon([(x * s, y * s) for x, y in points], fill=colour + (round(alpha * 255),))
+        img.alpha_composite(layer)
 
-    # Body
-    d.rounded_rectangle([v * s for v in BODY], radius=BODY_R * s, fill=WHITE)
-
-    # Keyhole cut back out in the shield colours.
-    hole = Image.new("L", (size, size), 0)
-    hd = ImageDraw.Draw(hole)
-    hd.ellipse(((512 - KEY_R) * s, (KEY_CY - KEY_R) * s, (512 + KEY_R) * s, (KEY_CY + KEY_R) * s), fill=255)
-    hd.rounded_rectangle([v * s for v in KEY_STEM], radius=12 * s, fill=255)
-    img.paste(halves, (0, 0), hole)
+    for i, colour, alpha in SHADING:
+        tint(facet(i), colour, alpha)
+    tint(INNER, *TABLE_TINT)
     return img
 
 
 def svg() -> str:
-    def path_d():
-        r = [TOP, *TOP_CURVE, SHOULDER, *SIDE_CURVE, TIP]
-        m = lambda p: f"{N - p[0]:.0f} {p[1]:.0f}"
-        q = lambda p: f"{p[0]:.0f} {p[1]:.0f}"
-        return (
-            f"M{q(r[0])} C{q(r[1])} {q(r[2])} {q(r[3])} C{q(r[4])} {q(r[5])} {q(r[6])} "
-            f"C{m(r[5])} {m(r[4])} {m(r[3])} C{m(r[2])} {m(r[1])} {m(r[0])} Z"
-        )
+    def path(points):
+        return "M" + " L".join(f"{x:.1f} {y:.1f}" for x, y in points) + " Z"
 
-    bx0, by0, bx1, by1 = BODY
-    sx0, sx1 = SHACKLE_CX - SHACKLE_R, SHACKLE_CX + SHACKLE_R
-    sy = SHACKLE_TOP + SHACKLE_R
-    kx0, ky0, kx1, ky1 = KEY_STEM
-    blue = "#%02x%02x%02x" % BLUE
-    teal = "#%02x%02x%02x" % TEAL
+    hex_ = lambda c: "#%02x%02x%02x" % c
+    layers = "\n".join(
+        f'  <path d="{path(facet(i))}" fill="{hex_(colour)}" fill-opacity="{alpha}"/>' for i, colour, alpha in SHADING
+    )
     return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {N} {N}">
   <defs>
-    <clipPath id="shield"><path d="{path_d()}"/></clipPath>
-    <clipPath id="keyhole">
-      <circle cx="512" cy="{KEY_CY}" r="{KEY_R}"/>
-      <rect x="{kx0}" y="{ky0}" width="{kx1 - kx0}" height="{ky1 - ky0}" rx="12"/>
-    </clipPath>
+    <clipPath id="gem"><path d="{path(OUTER)}"/></clipPath>
   </defs>
-  <g clip-path="url(#shield)">
-    <rect width="512" height="{N}" fill="{blue}"/>
-    <rect x="512" width="512" height="{N}" fill="{teal}"/>
+  <g clip-path="url(#gem)">
+    <rect width="{N // 2}" height="{N}" fill="{hex_(RUBY)}"/>
+    <rect x="{N // 2}" width="{N // 2}" height="{N}" fill="{hex_(EMERALD)}"/>
   </g>
-  <path d="M{sx0} {by0 + 20} V{sy} A{SHACKLE_R} {SHACKLE_R} 0 0 1 {sx1} {sy} V{by0 + 20}" fill="none" stroke="#fff" stroke-width="{SHACKLE_W}"/>
-  <rect x="{bx0}" y="{by0}" width="{bx1 - bx0}" height="{by1 - by0}" rx="{BODY_R}" fill="#fff"/>
-  <g clip-path="url(#keyhole)">
-    <rect width="512" height="{N}" fill="{blue}"/>
-    <rect x="512" width="512" height="{N}" fill="{teal}"/>
-  </g>
+{layers}
+  <path d="{path(INNER)}" fill="#ffffff" fill-opacity="{TABLE_TINT[1]}"/>
 </svg>
 """
 
 
 def font(size):
+    """Manrope ExtraBold, the app's font, falling back to the system's."""
+    manrope = os.path.join(ROOT, "crates", "tray", "ui", "fonts", "Manrope.ttf")
+    try:
+        f = ImageFont.truetype(manrope, size)
+        f.set_variation_by_axes([800])
+        return f
+    except (OSError, ValueError):
+        pass
     for name in ("segoeuib.ttf", "arialbd.ttf"):
         try:
             return ImageFont.truetype(name, size)
@@ -154,13 +128,19 @@ def installer_art(at):
     (text is drawn right of x=164), the banner tops the other pages."""
     dialog = Image.new("RGB", (493, 312), WHITE)
     d = ImageDraw.Draw(dialog)
-    d.rectangle((0, 0, 163, 312), fill=NAVY)
+    d.rectangle((0, 0, 163, 312), fill=OBSIDIAN)
+    # A soft emerald glow behind the gem, as in the app.
+    glow = Image.new("RGBA", (164, 312), (0, 0, 0, 0))
+    for r in range(70, 0, -2):
+        alpha = int(38 * (1 - r / 70) ** 1.6)
+        ImageDraw.Draw(glow).ellipse((82 - r, 128 - r, 82 + r, 128 + r), fill=EMERALD + (alpha,))
+    dialog.paste(glow, (0, 0), glow)
     logo = at(84)
     dialog.paste(logo, ((164 - 84) // 2, 86), logo)
     f = font(17)
     text = "Stayline VPN"
     w = d.textlength(text, font=f)
-    d.text(((164 - w) / 2, 186), text, font=f, fill=WHITE)
+    d.text(((164 - w) / 2, 188), text, font=f, fill=WHITE)
 
     banner = Image.new("RGB", (493, 58), WHITE)
     small = at(40)

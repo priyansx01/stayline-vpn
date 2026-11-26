@@ -28,13 +28,15 @@ if ($LASTEXITCODE -ne 0) { throw 'cargo about failed' }
 $content = [IO.File]::ReadAllText($html)
 $content = $content.Replace('<!-- SLINT_LICENSE -->', (Escape ([IO.File]::ReadAllText($slintLicense.FullName))))
 $content = $content.Replace('<!-- WINTUN_LICENSE -->', (Escape ([IO.File]::ReadAllText($wintunLicense))))
+$manropeLicense = Join-Path $root 'crates\tray\ui\fonts\OFL.txt'
+$content = $content.Replace('<!-- MANROPE_LICENSE -->', (Escape ([IO.File]::ReadAllText($manropeLicense))))
 [IO.File]::WriteAllText($html, $content, (New-Object Text.UTF8Encoding $false))
 
 $list = Join-Path $root 'crates\tray\third-party.txt'
 cargo about generate --workspace packaging\notices\list.hbs -o $list
 if ($LASTEXITCODE -ne 0) { throw 'cargo about failed' }
 # Show the licence stayline actually uses for Slint, not the whole choice.
-$lines = @("wintun.dll`t0.14.1`tWintun Prebuilt Binaries License") +
+$lines = @("wintun.dll`t0.14.1`tWintun Prebuilt Binaries License", "Manrope (font)`t4.505`tSIL Open Font License 1.1") +
     (Get-Content $list | Where-Object { $_ } | ForEach-Object {
         $_ -replace '\t[^\t]*LicenseRef-Slint-Royalty-free-2\.0[^\t]*$', "`tSlint Royalty-free License 2.0"
     })
