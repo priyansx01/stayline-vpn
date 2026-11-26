@@ -70,7 +70,9 @@ import io.github.priyansx01.stayline.ui.theme.Motion
 import io.github.priyansx01.stayline.ui.theme.Stayline
 import io.github.priyansx01.stayline.vpn.Attention
 import io.github.priyansx01.stayline.vpn.Traffic
+import io.github.priyansx01.stayline.vpn.TunnelRepository
 import io.github.priyansx01.stayline.vpn.TunnelState
+import io.github.priyansx01.stayline.vpn.statusCopy
 import kotlinx.coroutines.delay
 
 fun TunnelState.mood(): Mood = when (this) {
@@ -193,27 +195,10 @@ private fun rememberNow(): Long {
 private fun StatusText(state: TunnelState, profile: VpnProfile?) {
     val c = Stayline.colors
     val now = rememberNow()
-    // When the current state arrived, for the reconnect countdown.
-    val since = remember(state) { System.currentTimeMillis() }
-    val title = when (state) {
-        TunnelState.Disconnected -> "Not connected"
-        is TunnelState.Connecting -> "Connecting"
-        is TunnelState.Connected -> "Protected"
-        is TunnelState.Reconnecting -> "Reconnecting"
-        TunnelState.WaitingForNetwork -> "Waiting for network"
-        is TunnelState.NeedsUser -> "Needs you"
-    }
-    val subtitle = when (state) {
-        TunnelState.Disconnected -> if (profile == null) "Add your company gateway to begin" else "Tap the gem to connect to ${profile.name}"
-        is TunnelState.Connecting -> if (state.attempt > 1) "Attempt ${state.attempt} · ${profile?.gateway.orEmpty()}" else profile?.gateway.orEmpty()
-        is TunnelState.Connected -> "Tunnel address ${state.localIp}"
-        is TunnelState.Reconnecting -> {
-            val left = (state.retryInSecs - (now - since) / 1000).coerceAtLeast(0)
-            if (left > 0) "Trying again in ${left}s · ${state.lastError}" else state.lastError
-        }
-        TunnelState.WaitingForNetwork -> "Reconnects the moment you are back online"
-        is TunnelState.NeedsUser -> state.reason
-    }
+    val session by TunnelRepository.session.collectAsStateWithLifecycle()
+    val copy = statusCopy(state, session, profile?.name, now)
+    val title = copy.title
+    val subtitle = if (state == TunnelState.Disconnected && profile == null) "Add your company gateway to begin" else copy.detail
     AnimatedContent(
         title,
         transitionSpec = {
@@ -268,9 +253,10 @@ private fun StatsCard(state: TunnelState, traffic: Traffic) {
                 if (live) formatRate(traffic.upRate) else "—", c.ruby.base, dim, Modifier.weight(1f),
             )
         }
-        // Only takes room once there is traffic to draw, so the idle card stays balanced.
+        // Only takes room once traffic has flowed, so the card stays balanced
+        // before then (with a split tunnel, that can be a while).
         AnimatedVisibility(
-            live && traffic.samples.size >= 2,
+            live && traffic.samples.any { it > 0f },
             enter = expandVertically(Motion.gentle()) + fadeIn(),
             exit = shrinkVertically(Motion.gentle()) + fadeOut(),
         ) {

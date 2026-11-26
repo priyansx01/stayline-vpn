@@ -32,6 +32,11 @@ impl GatewayClient {
             .user_agent(USER_AGENT)
             .connect_timeout(REQUEST_TIMEOUT)
             .timeout(REQUEST_TIMEOUT)
+            // A kept-alive connection can be dead by the next attempt (the
+            // gateway dropped the session, or the network changed), and
+            // reusing it fails the login. A fresh connection costs one
+            // handshake per request; logins are rare.
+            .pool_max_idle_per_host(0)
             .build()?;
         Ok(Self { gateway, http })
     }

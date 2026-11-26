@@ -20,6 +20,7 @@ object Notifications {
     private const val ATTENTION = "attention"
     private const val EMERALD = 0xFF19C58A.toInt()
     private const val RUBY = 0xFFFF3B6B.toInt()
+    private const val TOPAZ = 0xFFF5B544.toInt()
 
     fun createChannels(context: Context) {
         val manager = context.getSystemService(NotificationManager::class.java)
@@ -50,7 +51,9 @@ object Notifications {
         val title = context.getString(
             when (state) {
                 is TunnelState.Connected -> R.string.notif_protected
-                is TunnelState.Reconnecting -> R.string.notif_reconnecting
+                // Failed attempts before the tunnel was ever up are still connecting.
+                is TunnelState.Reconnecting ->
+                    if (TunnelRepository.session.value.wasUp) R.string.notif_reconnecting else R.string.notif_connecting
                 TunnelState.WaitingForNetwork -> R.string.notif_waiting
                 else -> R.string.notif_connecting
             },
@@ -58,7 +61,7 @@ object Notifications {
         val text = listOfNotNull(profileName, (state as? TunnelState.Connected)?.localIp).joinToString(" · ")
         return NotificationCompat.Builder(context, STATUS)
             .setSmallIcon(R.drawable.ic_stat_gem)
-            .setColor(if (state is TunnelState.Connected) EMERALD else RUBY)
+            .setColor(if (state is TunnelState.Connected) EMERALD else TOPAZ)
             .setContentTitle(title)
             .setContentText(text)
             .setOngoing(true)

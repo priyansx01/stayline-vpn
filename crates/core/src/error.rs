@@ -10,7 +10,7 @@ pub enum Error {
     #[error("TLS error: {0}")]
     Tls(#[from] rustls::Error),
 
-    #[error("HTTP request failed: {0}")]
+    #[error("HTTP request failed: {}", with_causes(.0))]
     Http(reqwest::Error),
 
     #[error("network error: {0}")]
@@ -97,3 +97,19 @@ impl From<std::io::Error> for Error {
 }
 
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+/// An error and its causes: reqwest's own message ("error sending
+/// request") says nothing about why.
+fn with_causes(e: &(dyn std::error::Error + 'static)) -> String {
+    let mut text = e.to_string();
+    let mut source = e.source();
+    while let Some(cause) = source {
+        let cause_text = cause.to_string();
+        if !text.contains(&cause_text) {
+            text.push_str(": ");
+            text.push_str(&cause_text);
+        }
+        source = cause.source();
+    }
+    text
+}

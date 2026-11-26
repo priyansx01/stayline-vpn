@@ -6,15 +6,22 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
+import android.os.Build
+import android.os.Handler
+import android.os.Looper
 import android.os.PowerManager
 import androidx.core.content.ContextCompat
 
 /**
- * Tells the engine about the phone's default network, and when it leaves
- * deep sleep (Doze), after which the tunnel's connection is usually dead.
+ * Tells the engine about the network underneath the VPN (Wi-Fi or mobile
+ * data), and when the phone leaves deep sleep (Doze), after which the
+ * tunnel's connection is usually dead.
  *
- * The app is excluded from its own VPN, so the default network seen here
- * is the real one underneath.
+ * The VPN itself is never reported: its coming up would otherwise look
+ * like a network change and make the engine rebuild a tunnel that had
+ * just connected.
  */
 class NetworkMonitor(private val context: Context) {
     private val connectivity = context.getSystemService(ConnectivityManager::class.java)
@@ -25,6 +32,7 @@ class NetworkMonitor(private val context: Context) {
 
     private val callback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
+            if (isVpn(network) || network == current) return
             current = network
             NativeBridge.networkChanged(network.networkHandle, true)
         }
@@ -44,10 +52,19 @@ class NetworkMonitor(private val context: Context) {
     }
 
     fun start() {
-        val active = connectivity.activeNetwork
+        val active = connectivity.activeNetwork?.takeUnless(::isVpn)
         current = active
         NativeBridge.networkChanged(active?.networkHandle ?: 0, active != null)
-        connectivity.registerDefaultNetworkCallback(callback)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            // The network the system would use for us without any VPN.
+            val underlying = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
+                .build()
+            connectivity.registerBestMatchingNetworkCallback(underlying, callback, Handler(Looper.getMainLooper()))
+        } else {
+            connectivity.registerDefaultNetworkCallback(callback)
+        }
         ContextCompat.registerReceiver(
             context,
             idle,
@@ -60,4 +77,7 @@ class NetworkMonitor(private val context: Context) {
         runCatching { connectivity.unregisterNetworkCallback(callback) }
         runCatching { context.unregisterReceiver(idle) }
     }
+
+    private fun isVpn(network: Network): Boolean =
+        connectivity.getNetworkCapabilities(network)?.hasTransport(NetworkCapabilities.TRANSPORT_VPN) == true
 }

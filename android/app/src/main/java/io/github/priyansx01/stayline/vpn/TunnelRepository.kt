@@ -30,6 +30,13 @@ data class Traffic(
     }
 }
 
+/**
+ * The current connection as the user sees it. The engine reports a failed
+ * attempt as "reconnecting" even before the tunnel was ever up; until
+ * [wasUp], the app still calls that connecting.
+ */
+data class Session(val startedAt: Long = 0, val wasUp: Boolean = false)
+
 /** A connect the service picks up when it starts; the password is wiped after use. */
 class ConnectRequest(val profile: VpnProfile, val password: ByteArray)
 
@@ -37,6 +44,9 @@ class ConnectRequest(val profile: VpnProfile, val password: ByteArray)
 object TunnelRepository {
     private val _state = MutableStateFlow<TunnelState>(TunnelState.Disconnected)
     val state: StateFlow<TunnelState> = _state.asStateFlow()
+
+    private val _session = MutableStateFlow(Session())
+    val session: StateFlow<Session> = _session.asStateFlow()
 
     private val _traffic = MutableStateFlow(Traffic())
     val traffic: StateFlow<Traffic> = _traffic.asStateFlow()
@@ -63,6 +73,10 @@ object TunnelRepository {
                 val previous = _state.value
                 if (event.state is TunnelState.Connecting && !previous.isActive) {
                     _traffic.value = Traffic()
+                    _session.value = Session(startedAt = System.currentTimeMillis())
+                }
+                if (event.state is TunnelState.Connected) {
+                    _session.update { it.copy(wasUp = true) }
                 }
                 _state.value = event.state
             }
