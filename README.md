@@ -50,7 +50,7 @@ See the [user guide](docs/user-guide.md) for details. If FortiClient is connecte
 Build an installer with your gateway and certificate pin built in, or pass them to the generic MSI through Intune or Group Policy:
 
 ```powershell
-msiexec /i stayline-0.1.1.msi GATEWAY=vpn.example.com:10443 PIN=<sha256> CONNECTIONNAME="Example VPN" /qn
+msiexec /i stayline-0.2.0.msi GATEWAY=vpn.example.com:10443 PIN=<sha256> CONNECTIONNAME="Example VPN" /qn
 ```
 
 The [deployment guide](docs/deployment.md) covers company installers, all options, certificate pins and managing connections.

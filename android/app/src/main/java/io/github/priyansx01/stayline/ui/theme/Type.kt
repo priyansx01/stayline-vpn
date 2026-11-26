@@ -1,30 +1,31 @@
 package io.github.priyansx01.stayline.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.googlefonts.Font
-import androidx.compose.ui.text.googlefonts.GoogleFont
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import io.github.priyansx01.stayline.R
 
-private val provider = GoogleFont.Provider(
-    providerAuthority = "com.google.android.gms.fonts",
-    providerPackage = "com.google.android.gms",
-    certificates = R.array.com_google_android_gms_fonts_certs,
+/** One weight of the bundled variable font. */
+@OptIn(ExperimentalTextApi::class)
+private fun manrope(weight: FontWeight) = Font(
+    R.font.manrope,
+    weight = weight,
+    variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
 )
 
-private val manrope = GoogleFont("Manrope")
-
-/** Downloaded on first use, so the APK carries no font; falls back to the system font. */
+/** Bundled, so it works without Google services; the same file as the desktop app. */
 val Manrope = FontFamily(
-    Font(googleFont = manrope, fontProvider = provider, weight = FontWeight.Normal),
-    Font(googleFont = manrope, fontProvider = provider, weight = FontWeight.Medium),
-    Font(googleFont = manrope, fontProvider = provider, weight = FontWeight.SemiBold),
-    Font(googleFont = manrope, fontProvider = provider, weight = FontWeight.Bold),
-    Font(googleFont = manrope, fontProvider = provider, weight = FontWeight.ExtraBold),
+    manrope(FontWeight.Normal),
+    manrope(FontWeight.Medium),
+    manrope(FontWeight.SemiBold),
+    manrope(FontWeight.Bold),
+    manrope(FontWeight.ExtraBold),
 )
 
 /** Digits that do not shift as they change. */

@@ -1,0 +1,17 @@
+<p>Stayline connects your phone to your organisation's FortiGate SSL-VPN gateway and keeps the tunnel up. When you move between Wi-Fi and mobile data, lose signal for a moment or wake the phone, it reconnects on its own. It only asks you for something when it really needs you, such as a new password or a certificate to check.</p>
+
+<p><b>Features</b></p>
+<ul>
+<li>Signs in with your username and password, to split or full-tunnel gateways.</li>
+<li>Reconnects automatically after network changes, dropouts and sleep.</li>
+<li>Saved passwords are encrypted with a key held in the Android Keystore.</li>
+<li>Certificate pinning: trust a self-signed gateway once, and get warned if its certificate ever changes.</li>
+<li>Works with Android's Always-on VPN and "Block connections without VPN".</li>
+<li>Quick Settings tile to connect and disconnect from the notification shade.</li>
+<li>Captures IPv6 in full-tunnel mode so it cannot leak around the IPv4 tunnel.</li>
+<li>Small, with no trackers and no Google services. The tunnel engine is written in Rust and shared with the Windows app.</li>
+</ul>
+
+<p><b>Not supported yet</b>: SAML sign-in, token codes, IPsec, and IPv6 traffic through the tunnel. Split-DNS servers answer all lookups, because Android has no per-domain DNS for VPNs.</p>
+
+<p>Stayline is not affiliated with or endorsed by Fortinet, Inc. FortiGate and FortiClient are trademarks of Fortinet, Inc.</p>

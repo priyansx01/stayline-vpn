@@ -14,7 +14,7 @@ powershell -ExecutionPolicy Bypass -File scripts\build-installer.ps1 `
 **Generic installer** — the same MSI for everyone; pass the connection when installing (Intune, Group Policy, SCCM or a script):
 
 ```powershell
-msiexec /i stayline-0.1.1.msi GATEWAY=vpn.example.com:10443 PIN=<sha256> CONNECTIONNAME="Example VPN" /qn
+msiexec /i stayline-0.2.0.msi GATEWAY=vpn.example.com:10443 PIN=<sha256> CONNECTIONNAME="Example VPN" /qn
 ```
 
 | Script option | MSI property | Meaning |

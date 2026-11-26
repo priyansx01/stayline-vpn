@@ -36,3 +36,67 @@ jobs:
 
       - name: Test
         run: cargo test --workspace
+
+
+  android:
+    # Built twice, on different systems and paths: F-Droid ships the
+    # project-signed APKs only if its own rebuild matches them exactly.
+    name: Android build (${{ matrix.os }})
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            path: stayline
+          - os: ubuntu-22.04
+            path: elsewhere/vpn
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: ${{ matrix.path }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: ${{ matrix.path }}
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Install the Android NDK
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" > /dev/null
+
+      - name: Install Rust and cargo-ndk
+        run: |
+          rustup toolchain install
+          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+          cargo install cargo-ndk --version 4.1.2 --locked
+
+      # Unsigned, as F-Droid builds it.
+      - name: Build
+        working-directory: ${{ matrix.path }}/android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apks-${{ matrix.os }}
+          path: ${{ matrix.path }}/android/app/build/outputs/apk/release/*-unsigned.apk
+
+  android-reproducible:
+    name: Android builds match
+    needs: android
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/download-artifact@v4
+
+      - name: Compare
+        run: |
+          sha256sum apks-*/*.apk
+          for apk in apks-ubuntu-24.04/*.apk; do
+            other="apks-ubuntu-22.04/$(basename "$apk")"
+            if ! cmp -s "$apk" "$other"; then
+              echo "::error::$(basename "$apk") differs between the two builds"
+              exit 1
+            fi
+          done
+          echo "All APKs are identical."

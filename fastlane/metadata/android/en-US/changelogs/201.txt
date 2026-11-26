@@ -1,0 +1,4 @@
+First Android release.
+- Connects to FortiGate SSL-VPN gateways and reconnects by itself after network changes and sleep.
+- Always-on VPN, Quick Settings tile and certificate pinning.
+- Passwords encrypted with the Android Keystore.

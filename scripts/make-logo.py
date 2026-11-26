@@ -10,6 +10,8 @@ writes every logo asset, so the mark stays crisp at any size:
 - crates/tray/ui/icons/stayline-icon-32.png  window/taskbar icon
 - assets/installer-dialog.bmp            installer welcome/finish artwork
 - assets/installer-banner.bmp            installer top banner
+- fastlane/metadata/android/en-US/images/icon.png             store icon
+- fastlane/metadata/android/en-US/images/featureGraphic.png   store banner
 
     python scripts/make-logo.py
 """
@@ -106,12 +108,12 @@ def svg() -> str:
 """
 
 
-def font(size):
-    """Manrope ExtraBold, the app's font, falling back to the system's."""
+def font(size, weight=800):
+    """Manrope (ExtraBold by default), the app's font, falling back to the system's."""
     manrope = os.path.join(ROOT, "crates", "tray", "ui", "fonts", "Manrope.ttf")
     try:
         f = ImageFont.truetype(manrope, size)
-        f.set_variation_by_axes([800])
+        f.set_variation_by_axes([weight])
         return f
     except (OSError, ValueError):
         pass
@@ -150,6 +152,48 @@ def installer_art(at):
     banner.save(os.path.join(ROOT, "assets", "installer-banner.bmp"))
 
 
+def glow(size, centre, radius, colour, strength):
+    """A soft radial glow, as behind the gem in the apps."""
+    layer = Image.new("RGBA", size, (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    cx, cy = centre
+    for r in range(radius, 0, -3):
+        alpha = int(strength * (1 - r / radius) ** 1.8)
+        d.ellipse((cx - r, cy - r, cx + r, cy + r), fill=colour + (alpha,))
+    return layer
+
+
+def store_art(at):
+    """F-Droid's listing: the launcher icon (gem on obsidian) and a banner."""
+    out = os.path.join(ROOT, "fastlane", "metadata", "android", "en-US", "images")
+    os.makedirs(out, exist_ok=True)
+
+    icon = Image.new("RGBA", (512, 512), OBSIDIAN + (255,))
+    icon.alpha_composite(glow((512, 512), (256, 256), 240, EMERALD, 70))
+    gem = at(300)
+    icon.alpha_composite(gem, (106, 106))
+    icon.convert("RGB").save(os.path.join(out, "icon.png"), optimize=True)
+
+    banner = Image.new("RGBA", (1024, 500), OBSIDIAN + (255,))
+    banner.alpha_composite(glow((1024, 500), (250, 250), 260, EMERALD, 60))
+    banner.alpha_composite(glow((1024, 500), (900, 40), 260, RUBY, 28))
+    gem = at(260)
+    banner.alpha_composite(gem, (120, 120))
+    d = ImageDraw.Draw(banner)
+    room = 1024 - 450 - 48
+
+    def fitted(text, size, weight=800):
+        """The largest font up to `size` at which `text` fits the room."""
+        while size > 12 and d.textlength(text, font=font(size, weight)) > room:
+            size -= 2
+        return font(size, weight)
+
+    d.text((450, 160), "Stayline VPN", font=fitted("Stayline VPN", 76), fill=WHITE)
+    tagline = "The VPN that stays connected"
+    d.text((454, 268), tagline, font=fitted(tagline, 32, 600), fill=(156, 149, 168))
+    banner.convert("RGB").save(os.path.join(out, "featureGraphic.png"), optimize=True)
+
+
 def main():
     master = draw(scale=2).resize((N, N), Image.Resampling.LANCZOS)
 
@@ -173,7 +217,8 @@ def main():
         append_images=images[:-1],
     )
     installer_art(at)
-    print("wrote the SVG master, 512 px PNG, application icon, in-app logo and installer artwork")
+    store_art(at)
+    print("wrote the SVG master, 512 px PNG, application icon, in-app logo, installer and store artwork")
 
 
 if __name__ == "__main__":

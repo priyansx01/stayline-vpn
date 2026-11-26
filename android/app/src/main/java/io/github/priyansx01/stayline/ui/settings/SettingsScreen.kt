@@ -19,6 +19,16 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.font.FontFamily
+import io.github.priyansx01.stayline.ui.components.SheetHeader
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -42,6 +52,8 @@ fun SettingsScreen(vm: AppViewModel, settings: AppSettings) {
     val c = Stayline.colors
     val context = LocalContext.current
     fun open(intent: Intent) = runCatching { context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+    var showLicences by rememberSaveable { mutableStateOf(false) }
+    if (showLicences) LicencesSheet { showLicences = false }
 
     Column(Modifier.fillMaxSize().statusBarsPadding()) {
         ScreenHeader("PREFERENCES", "Settings", Modifier.padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 16.dp))
@@ -85,6 +97,9 @@ fun SettingsScreen(vm: AppViewModel, settings: AppSettings) {
                     Icon(Glyphs.External, null, Modifier.size(20.dp), tint = c.muted)
                 }
                 SettingRow("Licence", "MIT or Apache-2.0")
+                SettingRow("Open-source licences", "Components Stayline is built on", onClick = { showLicences = true }) {
+                    Icon(Glyphs.ChevronRight, null, Modifier.size(20.dp), tint = c.muted)
+                }
             }
 
             Text(
@@ -106,3 +121,56 @@ private fun Section(title: String, content: @Composable () -> Unit) {
         content()
     }
 }
+
+/** What Stayline is built on, with the font licence the OFL asks to ship. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun LicencesSheet(onClose: () -> Unit) {
+    val c = Stayline.colors
+    val context = LocalContext.current
+    val ofl = remember {
+        runCatching { context.assets.open("licenses/manrope-ofl.txt").bufferedReader().use { it.readText() } }.getOrDefault("")
+    }
+    ModalBottomSheet(
+        onDismissRequest = onClose,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        containerColor = c.surface,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .verticalScroll(rememberScrollState())
+                .navigationBarsPadding()
+                .padding(horizontal = 20.dp)
+                .padding(bottom = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SheetHeader("Open-source licences", onClose)
+            LICENCES.forEach { (name, licence) ->
+                Column {
+                    Text(name, style = MaterialTheme.typography.titleSmall, color = c.text)
+                    Text(licence, style = MaterialTheme.typography.bodySmall, color = c.muted)
+                }
+            }
+            Text(
+                "The full list of Rust components and their licences is in THIRD-PARTY-NOTICES.html in the source code.",
+                style = MaterialTheme.typography.bodySmall,
+                color = c.muted,
+            )
+            Text("MANROPE LICENCE", style = MaterialTheme.typography.labelSmall, color = c.muted)
+            Text(
+                ofl,
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                color = c.text,
+            )
+        }
+    }
+}
+
+private val LICENCES = listOf(
+    "Stayline and its Rust tunnel engine" to "MIT or Apache-2.0",
+    "Rust crates (tokio, rustls, ring, reqwest and others)" to "MIT, Apache-2.0, ISC and similar permissive licences",
+    "AndroidX, Jetpack Compose and Kotlin libraries" to "Apache-2.0",
+    "Manrope typeface, The Manrope Project Authors" to "SIL Open Font License 1.1, reproduced below",
+)
+

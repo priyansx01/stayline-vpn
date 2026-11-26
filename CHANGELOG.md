@@ -4,13 +4,19 @@ All notable changes to Stayline VPN are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-26
+
 ### Added
+- Android releases: separate APKs for armeabi-v7a, arm64-v8a and x86_64, signed with the project's own key and reproducible from source, ready for F-Droid.
 - Android app: a native Jetpack Compose interface in ruby and emerald with micro-animations, on the same Rust tunnel as Windows (`crates/mobile`). Supports Always-on VPN and a Quick Settings tile, and keeps passwords in the Android Keystore.
 - `stayline-session` crate with the code the Windows service and the Android engine share.
 - Licence files, contributing guide, security policy, code of conduct and documentation in `docs/`.
 - GitHub Actions: CI (format, clippy, tests) and a release workflow that publishes the MSI.
 
 ### Changed
+- Logins open a fresh connection to the gateway instead of reusing a kept-alive one that may have died. HTTP errors now include their causes.
+- Android connects on the first attempt: the app no longer mistakes the VPN coming up for a network change. Until the tunnel has been up once, it shows one calm "Connecting" step.
+- Android bundles the Manrope typeface instead of downloading it through Google Play Services, so it works on phones without Google.
 - The Windows app now matches the Android design. It uses ruby, topaz and emerald for off, working and protected, the Manrope typeface, and a cut-gem connect button. The button changes colour with the state, spins a ring while connecting and ripples once when the tunnel comes up.
 - Other motion:
   - a sliding sidebar pill;
@@ -50,6 +56,7 @@ All notable changes to Stayline VPN are documented here. The format is based on 
 - MSI installer, including company installers with a built-in connection.
 - About page listing every open-source component and its licence.
 
-[Unreleased]: https://github.com/priyansx01/stayline-vpn/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/priyansx01/stayline-vpn/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/priyansx01/stayline-vpn/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/priyansx01/stayline-vpn/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/priyansx01/stayline-vpn/releases/tag/v0.1.0

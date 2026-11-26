@@ -1,0 +1,111 @@
+# F-Droid recipe for Stayline VPN, submitted to gitlab.com/fdroid/fdroiddata
+# as metadata/io.github.priyansx01.stayline.yml. Kept here for reference;
+# fdroiddata holds the live copy.
+#
+# Reproducible: F-Droid rebuilds each APK unsigned and, if it matches the
+# project-signed APK on the GitHub release byte for byte (apart from the
+# signature), ships that APK. Its signing certificate goes in
+# AllowedAPKSigningKeys.
+
+AntiFeatures:
+  NonFreeNet:
+    en-US: Works only with Fortinet's proprietary FortiGate SSL-VPN servers.
+Categories:
+  - Connectivity
+  - VPN & Proxy
+License: MIT
+AuthorName: Priyansh
+SourceCode: https://github.com/priyansx01/stayline-vpn
+IssueTracker: https://github.com/priyansx01/stayline-vpn/issues
+Changelog: https://github.com/priyansx01/stayline-vpn/blob/HEAD/CHANGELOG.md
+
+AutoName: Stayline VPN
+
+RepoType: git
+Repo: https://github.com/priyansx01/stayline-vpn.git
+
+Builds:
+  - versionName: 0.2.0
+    versionCode: 201
+    commit: v0.2.0
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y build-essential
+    gradle:
+      - yes
+    output: build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk
+    binary: https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-armeabi-v7a.apk
+    srclibs:
+      - rustup@1.28.2
+    prebuild:
+      - $$rustup$$/rustup-init.sh -y --default-toolchain none --profile minimal
+      - source $HOME/.cargo/env
+      - cd ../..
+      - rustup toolchain install
+      - rustup target add armv7-linux-androideabi aarch64-linux-android x86_64-linux-android
+      - cargo install cargo-ndk --version 4.1.2 --locked
+    ndk: r28c
+    gradleprops:
+      - stayline.abis=armeabi-v7a
+
+  - versionName: 0.2.0
+    versionCode: 202
+    commit: v0.2.0
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y build-essential
+    gradle:
+      - yes
+    output: build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
+    binary: https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-arm64-v8a.apk
+    srclibs:
+      - rustup@1.28.2
+    prebuild:
+      - $$rustup$$/rustup-init.sh -y --default-toolchain none --profile minimal
+      - source $HOME/.cargo/env
+      - cd ../..
+      - rustup toolchain install
+      - rustup target add armv7-linux-androideabi aarch64-linux-android x86_64-linux-android
+      - cargo install cargo-ndk --version 4.1.2 --locked
+    ndk: r28c
+    gradleprops:
+      - stayline.abis=arm64-v8a
+
+  - versionName: 0.2.0
+    versionCode: 203
+    commit: v0.2.0
+    subdir: android/app
+    sudo:
+      - apt-get update
+      - apt-get install -y build-essential
+    gradle:
+      - yes
+    output: build/outputs/apk/release/app-x86_64-release-unsigned.apk
+    binary: https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-x86_64.apk
+    srclibs:
+      - rustup@1.28.2
+    prebuild:
+      - $$rustup$$/rustup-init.sh -y --default-toolchain none --profile minimal
+      - source $HOME/.cargo/env
+      - cd ../..
+      - rustup toolchain install
+      - rustup target add armv7-linux-androideabi aarch64-linux-android x86_64-linux-android
+      - cargo install cargo-ndk --version 4.1.2 --locked
+    ndk: r28c
+    gradleprops:
+      - stayline.abis=x86_64
+
+AllowedAPKSigningKeys: REPLACE_WITH_RELEASE_CERT_SHA256
+
+AutoUpdateMode: Version
+UpdateCheckMode: Tags ^v[0-9.]+$
+VercodeOperation:
+  - 10*%c+1
+  - 10*%c+2
+  - 10*%c+3
+UpdateCheckData: android/app/build.gradle.kts|versionCode = (\d+)|.|versionName =
+  "([^"]+)"
+CurrentVersion: 0.2.0
+CurrentVersionCode: 203

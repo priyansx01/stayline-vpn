@@ -36,11 +36,18 @@ Not supported, as on Windows: SAML, token codes, IPsec.
 
 ## Building
 
-You need [rustup](https://rustup.rs), the Android SDK with NDK 28.2.13676358, and JDK 17 or later.
+You need [rustup](https://rustup.rs), the Android SDK with NDK 28.2.13676358 (r28c), and JDK 17. Releases are built with exactly these versions, so a rebuild matches them byte for byte:
+
+| Tool | Version |
+| --- | --- |
+| Rust | 1.99.0, from `rust-toolchain.toml` |
+| Android NDK | 28.2.13676358 (r28c) |
+| cargo-ndk | 4.1.2 |
+| JDK | 17 |
 
 ```sh
 rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
-cargo install cargo-ndk
+cargo install cargo-ndk --version 4.1.2 --locked
 ```
 
 Point `android/local.properties` at the SDK (`sdk.dir=...`), then:
@@ -53,7 +60,50 @@ cd android
 
 The `cargoBuild` task builds `crates/mobile` with `cargo ndk` into `app/src/main/jniLibs` before every build. Pass `-Pstayline.skipCargo=true` to reuse libraries already there.
 
-Release builds are signed with the debug key so they can be installed for testing. Configure a real signing key before publishing.
+Release builds are unsigned unless the release key is in the environment (see [Releasing](#releasing)). To install one on a phone while testing, sign it with the debug key: `-Pstayline.debugSign=true`.
+
+Each CPU type gets its own APK and version code: `versionCode` × 10 plus 1 for armeabi-v7a, 2 for arm64-v8a and 3 for x86_64. Version 0.2.0 (code 20) is 201, 202 and 203.
+
+## Releasing
+
+Releases are built on GitHub's Linux runners and signed with the project's key. F-Droid rebuilds the same tag. If its unsigned APKs match the signed ones apart from the signature, it ships the project-signed APKs, so the app updates from either source. CI builds the APKs twice, on different systems and paths, and fails if they differ.
+
+### Once: the release key
+
+The key signs every future update. If it is lost, no update can replace installed copies, so keep it out of the repo and back it up offline.
+
+```sh
+keytool -genkeypair -keystore stayline-release.jks -alias stayline   -keyalg RSA -keysize 4096 -validity 10000
+keytool -list -v -keystore stayline-release.jks -alias stayline   # note the SHA-256
+```
+
+Add these secrets to the GitHub repository (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+| --- | --- |
+| `STAYLINE_KEYSTORE_BASE64` | `base64 -w0 stayline-release.jks` |
+| `STAYLINE_KEYSTORE_PASSWORD` | the keystore password |
+| `STAYLINE_KEY_ALIAS` | `stayline` |
+| `STAYLINE_KEY_PASSWORD` | the key password |
+
+The certificate's SHA-256 (lowercase hex, no colons) goes in `AllowedAPKSigningKeys` in the F-Droid recipe.
+
+### Each release
+
+1. Set the version in `Cargo.toml` (workspace) and in `android/app/build.gradle.kts`. Raise `versionName`, and raise `versionCode` by at least one: 0.2.0 is 20, so the next release is 21 or more.
+2. Add `fastlane/metadata/android/en-US/changelogs/<code>.txt` for each of the three version codes, and update `CHANGELOG.md`.
+3. Push a `v<version>` tag. The release workflow publishes the MSI, then attaches `stayline-<version>-<abi>.apk` and `SHA256SUMS`.
+
+F-Droid's update checker notices the tag and builds it.
+
+### Once: submitting to F-Droid
+
+`packaging/fdroid/io.github.priyansx01.stayline.yml` is the recipe. Put the release certificate's SHA-256 in it, then:
+
+1. Fork [fdroiddata](https://gitlab.com/fdroid/fdroiddata) on GitLab and add the recipe as `metadata/io.github.priyansx01.stayline.yml`.
+2. Open a merge request. F-Droid's CI lints and builds it, and reviewers may ask for changes.
+
+The store listing (title, descriptions, icon, banner, screenshots and changelogs) is read from `fastlane/metadata/android/en-US/` in this repo.
 
 ## Size
 
