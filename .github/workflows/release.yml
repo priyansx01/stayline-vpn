@@ -65,8 +65,12 @@ jobs:
 
   android:
     name: Build Android APKs and attach them
-    # The MSI job creates the release; this one adds to it.
+    # The MSI job creates the release; this one adds to it. Off unless the
+    # repository variable STAYLINE_SIGN_IN_CI is "true" and the signing
+    # secrets are set; otherwise the APKs are signed on the maintainer's
+    # machine and attached by hand (see docs/android.md).
     needs: release
+    if: ${{ vars.STAYLINE_SIGN_IN_CI == 'true' }}
     runs-on: ubuntu-24.04
     env:
       # Pinned so F-Droid's rebuild of the same tag produces the same APKs.

@@ -92,7 +92,8 @@ The certificate's SHA-256 (lowercase hex, no colons) goes in `AllowedAPKSigningK
 
 1. Set the version in `Cargo.toml` (workspace) and in `android/app/build.gradle.kts`. Raise `versionName`, and raise `versionCode` by at least one: 0.2.0 is 20, so the next release is 21 or more.
 2. Add `fastlane/metadata/android/en-US/changelogs/<code>.txt` for each of the three version codes, and update `CHANGELOG.md`.
-3. Push a `v<version>` tag. The release workflow publishes the MSI, then attaches `stayline-<version>-<abi>.apk` and `SHA256SUMS`.
+3. Push a `v<version>` tag. The release workflow publishes the MSI.
+4. Attach the signed APKs. The release key is kept off GitHub, so build the APKs (any Linux machine with the pinned tools: `./gradlew assembleRelease` gives unsigned APKs), sign them with `apksigner sign --ks stayline-release.jks --ks-key-alias stayline`, and attach them as `stayline-<version>-<abi>.apk` with a `SHA256SUMS` file (`gh release upload v<version> ...`). Alternatively, add the secrets above and set the repository variable `STAYLINE_SIGN_IN_CI` to `true`, and the workflow builds, signs and attaches them itself.
 
 F-Droid's update checker notices the tag and builds it.
 
