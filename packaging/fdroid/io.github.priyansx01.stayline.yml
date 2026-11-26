@@ -97,7 +97,7 @@ Builds:
     gradleprops:
       - stayline.abis=x86_64
 
-AllowedAPKSigningKeys: REPLACE_WITH_RELEASE_CERT_SHA256
+AllowedAPKSigningKeys: 1bee5aabbcd28763c287b90bf10ca55c499214219a4b3c6ae140508dfaddc8ad
 
 AutoUpdateMode: Version
 UpdateCheckMode: Tags ^v[0-9.]+$
