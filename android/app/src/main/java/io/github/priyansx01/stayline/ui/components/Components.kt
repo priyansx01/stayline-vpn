@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -59,6 +60,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -211,7 +213,8 @@ fun Field(
             onValueChange = onValueChange,
             label = { Text(label) },
             placeholder = placeholder?.let { { Text(it, color = c.muted.copy(alpha = 0.6f)) } },
-            singleLine = true,
+            singleLine = !monospace,
+            maxLines = if (monospace) 3 else 1,
             isError = error != null,
             textStyle = if (monospace) MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace) else MaterialTheme.typography.bodyLarge,
             visualTransformation = if (password && !visible) PasswordVisualTransformation() else VisualTransformation.None,
@@ -363,18 +366,32 @@ fun Toggle(checked: Boolean, onChange: (Boolean) -> Unit) {
     )
 }
 
-/** A small rounded label. */
+/**
+ * A small rounded label. Status words ("Active") are capitals; details
+ * with an [icon] ("Saved") read as plain words and stay compact.
+ */
 @Composable
-fun Chip(text: String, color: Color, modifier: Modifier = Modifier) {
-    Text(
-        text.uppercase(Locale.ROOT),
-        style = MaterialTheme.typography.labelSmall,
-        color = color,
-        modifier = modifier
+fun Chip(text: String, color: Color, modifier: Modifier = Modifier, icon: ImageVector? = null) {
+    Row(
+        modifier
             .clip(CircleShape)
             .background(color.copy(alpha = 0.14f))
-            .padding(horizontal = 10.dp, vertical = 4.dp),
-    )
+            .padding(start = if (icon != null) 8.dp else 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (icon != null) {
+            Icon(icon, null, Modifier.size(13.dp), tint = color)
+            Spacer(Modifier.width(4.dp))
+        }
+        Text(
+            if (icon != null) text else text.uppercase(Locale.ROOT),
+            style = if (icon != null) MaterialTheme.typography.labelMedium else MaterialTheme.typography.labelSmall,
+            color = color,
+            // A chip is one word or two: it never wraps, its row does.
+            maxLines = 1,
+            softWrap = false,
+        )
+    }
 }
 
 /** Each character rolls in from below as it changes, like an odometer. */
@@ -386,12 +403,14 @@ fun RollingText(text: String, style: TextStyle, color: Color, modifier: Modifier
             key(index) {
                 AnimatedContent(
                     targetState = char,
+                    modifier = Modifier.clipToBounds(),
                     transitionSpec = {
                         if (reduced) {
                             fadeIn(tween(0)) togetherWith fadeOut(tween(0))
                         } else {
-                            (slideInVertically(Motion.gentle()) { it } + fadeIn()) togetherWith
-                                (slideOutVertically(Motion.gentle()) { -it } + fadeOut())
+                            // Quick, so a digit is never caught half-way for long.
+                            (slideInVertically(tween(250, easing = FastOutSlowInEasing)) { it } + fadeIn(tween(200))) togetherWith
+                                (slideOutVertically(tween(250, easing = FastOutSlowInEasing)) { -it } + fadeOut(tween(150)))
                         }
                     },
                     label = "digit",

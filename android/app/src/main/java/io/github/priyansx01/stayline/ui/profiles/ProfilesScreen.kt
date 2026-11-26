@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -186,9 +187,14 @@ private fun ProfileCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 if (savedPassword || !profile.pin.isNullOrBlank()) {
-                    Row(Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        if (savedPassword) Chip("Password saved", c.muted)
-                        if (!profile.pin.isNullOrBlank()) Chip("Pinned", c.topaz.base)
+                    // Chips move to a new line rather than squeezing each other.
+                    FlowRow(
+                        Modifier.padding(top = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        if (savedPassword) Chip("Saved", c.muted, icon = Glyphs.Lock)
+                        if (!profile.pin.isNullOrBlank()) Chip("Pinned", c.topaz.base, icon = Glyphs.Badge)
                     }
                 }
             }

@@ -98,7 +98,7 @@ fun ProfileEditor(editor: Editor, vm: AppViewModel) {
                     Field(
                         password,
                         { password = it },
-                        if (original != null && vm.hasPassword(original)) "New password (leave empty to keep)" else "Password",
+                        if (original != null && vm.hasPassword(original)) "New password (optional)" else "Password",
                         password = true,
                         modifier = Modifier.padding(top = 8.dp),
                     )
