@@ -53,11 +53,15 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
+        # The release may already exist, e.g. created by hand with the APKs.
         run: |
-          gh release create "${{ github.ref_name }}" `
+          gh release view "${{ github.ref_name }}" *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create "${{ github.ref_name }}" --title "Stayline VPN $env:VERSION" --generate-notes
+          }
+          gh release upload "${{ github.ref_name }}" --clobber `
             "target\installer\stayline-$env:VERSION.msi" `
-            "target\installer\stayline-$env:VERSION.msi.sha256" `
-            --title "Stayline VPN $env:VERSION" --generate-notes
+            "target\installer\stayline-$env:VERSION.msi.sha256"
 
   android:
     name: Build Android APKs and attach them
@@ -113,4 +117,14 @@ jobs:
       - name: Attach to the release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release upload "$GITHUB_REF_NAME" out/*
+        # APKs already attached (signed by hand) are kept: they are the ones
+        # F-Droid verified against.
+        run: |
+          have=$(gh release view "$GITHUB_REF_NAME" --json assets -q '.assets[].name')
+          for f in out/*; do
+            if grep -qxF "$(basename "$f")" <<< "$have"; then
+              echo "keeping the attached $(basename "$f")"
+            else
+              gh release upload "$GITHUB_REF_NAME" "$f"
+            fi
+          done
