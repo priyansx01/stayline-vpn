@@ -1,0 +1,1 @@
+Build fix for F-Droid; the app is unchanged from 0.2.0.

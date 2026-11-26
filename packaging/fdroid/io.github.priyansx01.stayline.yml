@@ -25,9 +25,9 @@ RepoType: git
 Repo: https://github.com/priyansx01/stayline-vpn.git
 
 Builds:
-  - versionName: 0.2.0
-    versionCode: 201
-    commit: v0.2.0
+  - versionName: 0.2.1
+    versionCode: 211
+    commit: v0.2.1
     subdir: android/app
     sudo:
       - apt-get update
@@ -35,7 +35,8 @@ Builds:
     gradle:
       - yes
     output: build/outputs/apk/release/app-armeabi-v7a-release-unsigned.apk
-    binary: https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-armeabi-v7a.apk
+    binary: 
+      https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-armeabi-v7a.apk
     srclibs:
       - rustup@1.28.2
     prebuild:
@@ -49,9 +50,9 @@ Builds:
     gradleprops:
       - stayline.abis=armeabi-v7a
 
-  - versionName: 0.2.0
-    versionCode: 202
-    commit: v0.2.0
+  - versionName: 0.2.1
+    versionCode: 212
+    commit: v0.2.1
     subdir: android/app
     sudo:
       - apt-get update
@@ -59,7 +60,8 @@ Builds:
     gradle:
       - yes
     output: build/outputs/apk/release/app-arm64-v8a-release-unsigned.apk
-    binary: https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-arm64-v8a.apk
+    binary: 
+      https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-arm64-v8a.apk
     srclibs:
       - rustup@1.28.2
     prebuild:
@@ -73,9 +75,9 @@ Builds:
     gradleprops:
       - stayline.abis=arm64-v8a
 
-  - versionName: 0.2.0
-    versionCode: 203
-    commit: v0.2.0
+  - versionName: 0.2.1
+    versionCode: 213
+    commit: v0.2.1
     subdir: android/app
     sudo:
       - apt-get update
@@ -83,7 +85,8 @@ Builds:
     gradle:
       - yes
     output: build/outputs/apk/release/app-x86_64-release-unsigned.apk
-    binary: https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-x86_64.apk
+    binary: 
+      https://github.com/priyansx01/stayline-vpn/releases/download/v%v/stayline-%v-x86_64.apk
     srclibs:
       - rustup@1.28.2
     prebuild:
@@ -107,5 +110,5 @@ VercodeOperation:
   - 10*%c+3
 UpdateCheckData: android/app/build.gradle.kts|versionCode = (\d+)|.|versionName =
   "([^"]+)"
-CurrentVersion: 0.2.0
-CurrentVersionCode: 203
+CurrentVersion: 0.2.1
+CurrentVersionCode: 213

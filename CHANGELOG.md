@@ -4,6 +4,11 @@ All notable changes to Stayline VPN are documented here. The format is based on 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-26
+
+### Fixed
+- Android builds start the Rust toolchain by its full path, so they work where Rust is installed without being on the build's PATH, as on F-Droid's build servers. The app itself is unchanged.
+
 ## [0.2.0] - 2026-11-26
 
 ### Added
@@ -56,7 +61,8 @@ All notable changes to Stayline VPN are documented here. The format is based on 
 - MSI installer, including company installers with a built-in connection.
 - About page listing every open-source component and its licence.
 
-[Unreleased]: https://github.com/priyansx01/stayline-vpn/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/priyansx01/stayline-vpn/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/priyansx01/stayline-vpn/compare/v0.2.0...v0.2.1
 [0.2.0]: https://github.com/priyansx01/stayline-vpn/compare/v0.1.1...v0.2.0
 [0.1.1]: https://github.com/priyansx01/stayline-vpn/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/priyansx01/stayline-vpn/releases/tag/v0.1.0

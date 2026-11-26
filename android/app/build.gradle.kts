@@ -31,8 +31,8 @@ android {
         applicationId = "io.github.priyansx01.stayline"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20
-        versionName = "0.2.0"
+        versionCode = 21
+        versionName = "0.2.1"
     }
 
     signingConfigs {
@@ -110,11 +110,17 @@ val cargoBuild = tasks.register<Exec>("cargoBuild") {
     description = "Builds the Rust tunnel engine for Android."
     workingDir = rootDir.parentFile
     environment("ANDROID_NDK_HOME", android.ndkDirectory.absolutePath)
+    val root = rootDir.parentFile.absolutePath
+    val cargoHome = System.getenv("CARGO_HOME") ?: "${System.getProperty("user.home")}/.cargo"
+    // Java finds the program to start on Gradle's own PATH, not the one
+    // given to the task, and on F-Droid's servers rustup is installed in a
+    // step that does not change Gradle's PATH. So name cargo by its path.
+    val windows = System.getProperty("os.name").startsWith("Windows")
+    val cargoExe = File(cargoHome, if (windows) "bin/cargo.exe" else "bin/cargo")
+    val cargo = if (cargoExe.isFile) cargoExe.absolutePath else "cargo"
     // Keep machine-specific paths out of the library, so a build anywhere
     // (here, CI, F-Droid's servers) produces the same bytes. CFLAGS covers
     // the C code some crates compile (ring).
-    val root = rootDir.parentFile.absolutePath
-    val cargoHome = System.getenv("CARGO_HOME") ?: "${System.getProperty("user.home")}/.cargo"
     environment("RUSTFLAGS", "--remap-path-prefix=$root=/stayline --remap-path-prefix=$cargoHome=/cargo")
     environment("CFLAGS", "-ffile-prefix-map=$root=/stayline -ffile-prefix-map=$cargoHome=/cargo")
     // Build steps on F-Droid's servers do not share a shell, so rustup's
@@ -122,7 +128,7 @@ val cargoBuild = tasks.register<Exec>("cargoBuild") {
     environment("PATH", "$cargoHome/bin${File.pathSeparator}${System.getenv("PATH")}")
     commandLine(
         buildList {
-            addAll(listOf("cargo", "ndk"))
+            addAll(listOf(cargo, "ndk"))
             abis.forEach { addAll(listOf("-t", it)) }
             addAll(listOf("-P", "26", "-o", jniLibsDir.asFile.absolutePath))
             addAll(listOf("build", "--release", "-p", "stayline-mobile"))
