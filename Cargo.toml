@@ -33,7 +33,7 @@ stayline-net = { path = "crates/net" }
 stayline-session = { path = "crates/session" }
 
 # UI (tray)
-tray-icon = "0.26.0"
+tray-icon = "0.27.0"
 muda = "0.21.0"
 slint = "1.18.1"
 slint-build = "1.18.1"
